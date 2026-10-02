@@ -258,13 +258,41 @@
         let analyser = null;
         let dataArray = null;
 
-        // Speaker color palette mapping
-        const speakerColors = {
-            'Martin': { bg: 'bg-sky-500/10', border: 'border-sky-500/30', text: 'text-sky-400', badgeBg: 'bg-sky-500' },
-            'Katherine': { bg: 'bg-purple-500/10', border: 'border-purple-500/30', text: 'text-purple-400', badgeBg: 'bg-purple-500' },
-            'Narrator': { bg: 'bg-amber-500/10', border: 'border-amber-500/30', text: 'text-amber-400', badgeBg: 'bg-amber-500' },
-            'Default': { bg: 'bg-slate-800/40', border: 'border-slate-700/50', text: 'text-brand-400', badgeBg: 'bg-brand-500' }
-        };
+        // Danh sách bảng màu chuẩn Tailwind phong phú dành cho các tên người nói ngẫu nhiên
+        const colorPaletteList = [
+            { bg: 'bg-sky-500/10', border: 'border-sky-500/30', text: 'text-sky-400', badgeBg: 'bg-sky-500' },
+            { bg: 'bg-purple-500/10', border: 'border-purple-500/30', text: 'text-purple-400', badgeBg: 'bg-purple-500' },
+            { bg: 'bg-emerald-500/10', border: 'border-emerald-500/30', text: 'text-emerald-400', badgeBg: 'bg-emerald-500' },
+            { bg: 'bg-amber-500/10', border: 'border-amber-500/30', text: 'text-amber-400', badgeBg: 'bg-amber-500' },
+            { bg: 'bg-rose-500/10', border: 'border-rose-500/30', text: 'text-rose-400', badgeBg: 'bg-rose-500' },
+            { bg: 'bg-indigo-500/10', border: 'border-indigo-500/30', text: 'text-indigo-400', badgeBg: 'bg-indigo-500' },
+            { bg: 'bg-teal-500/10', border: 'border-teal-500/30', text: 'text-teal-400', badgeBg: 'bg-teal-500' },
+            { bg: 'bg-fuchsia-500/10', border: 'border-fuchsia-500/30', text: 'text-fuchsia-400', badgeBg: 'bg-fuchsia-500' },
+            { bg: 'bg-orange-500/10', border: 'border-orange-500/30', text: 'text-orange-400', badgeBg: 'bg-orange-500' },
+            { bg: 'bg-cyan-500/10', border: 'border-cyan-500/30', text: 'text-cyan-400', badgeBg: 'bg-cyan-500' },
+            { bg: 'bg-pink-500/10', border: 'border-pink-500/30', text: 'text-pink-400', badgeBg: 'bg-pink-500' },
+            { bg: 'bg-lime-500/10', border: 'border-lime-500/30', text: 'text-lime-400', badgeBg: 'bg-lime-500' }
+        ];
+
+        // Bộ nhớ đệm giữ màu cố định cho mỗi speaker trong phiên làm việc
+        const speakerColorsCache = {};
+
+        function getSpeakerColor(speaker) {
+            const speakerName = (speaker || 'Speaker').trim();
+            if (speakerColorsCache[speakerName]) {
+                return speakerColorsCache[speakerName];
+            }
+
+            // Giải thuật băm tên người nói để gán màu ngẫu nhiên nhưng cố định cho từng người
+            let hash = 0;
+            for (let i = 0; i < speakerName.length; i++) {
+                hash = speakerName.charCodeAt(i) + ((hash << 5) - hash);
+            }
+            const index = Math.abs(hash) % colorPaletteList.length;
+            const color = colorPaletteList[index];
+            speakerColorsCache[speakerName] = color;
+            return color;
+        }
 
         function parseTimestamp(timeStr) {
             timeStr = timeStr.replace(',', '.').trim();
@@ -345,7 +373,7 @@
 
             subtitleCues.forEach((cue, index) => {
                 speakersFound.add(cue.speaker);
-                const colorConfig = speakerColors[cue.speaker] || speakerColors['Default'];
+                const colorConfig = getSpeakerColor(cue.speaker);
                 const blurStyle = isSubtitlesVisible ? '' : 'blur-md select-none group-hover:blur-none transition-all duration-300';
 
                 const item = document.createElement('div');
@@ -371,7 +399,7 @@
 
             // Speakers Legend Badges
             speakersFound.forEach(speaker => {
-                const colorConfig = speakerColors[speaker] || speakerColors['Default'];
+                const colorConfig = getSpeakerColor(speaker);
                 const badge = document.createElement('span');
                 badge.className = `inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold ${colorConfig.bg} ${colorConfig.text} border ${colorConfig.border} shrink-0`;
                 badge.innerHTML = `<span class="w-1.5 h-1.5 rounded-full ${colorConfig.badgeBg}"></span>${speaker}`;
