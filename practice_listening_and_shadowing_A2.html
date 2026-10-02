@@ -1,0 +1,872 @@
+<!DOCTYPE html>
+<html lang="vi" class="h-full dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Audio & Subtitle VTT Player Studio</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#f0f9ff',
+                            100: '#e0f2fe',
+                            500: '#0ea5e9',
+                            600: '#0284c7',
+                            700: '#0369a1',
+                            900: '#0c4a6e',
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <style>
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: rgba(0,0,0,0.1);
+            border-radius: 8px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: rgba(255,255,255,0.2);
+            border-radius: 8px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: rgba(14, 165, 233, 0.6);
+        }
+        .active-sentence {
+            border-left: 4px solid #0ea5e9 !important;
+            background-color: rgba(14, 165, 233, 0.18) !important;
+            box-shadow: 0 4px 14px rgba(14, 165, 233, 0.15);
+        }
+    </style>
+</head>
+<body class="bg-slate-950 text-slate-100 font-sans h-screen h-[100dvh] flex flex-col overflow-hidden antialiased selection:bg-brand-500 selection:text-white">
+
+    <header class="border-b border-slate-800 bg-slate-900/90 backdrop-blur shrink-0 z-50">
+        <div class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 h-14 sm:h-16 flex items-center justify-between">
+            <div class="flex items-center gap-2 sm:gap-3">
+                <div class="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-tr from-brand-600 to-indigo-600 flex items-center justify-center text-white shadow-lg shadow-brand-500/20">
+                    <i class="fa-solid fa-sliders text-sm sm:text-lg"></i>
+                </div>
+                <div>
+                    <h1 class="font-bold text-sm sm:text-lg leading-none text-white flex items-center gap-1.5 sm:gap-2">
+                        VTT Audio Studio
+                        <span id="vtt-status-tag" class="text-[9px] sm:text-[10px] font-normal px-1.5 py-0.5 rounded bg-slate-800 text-slate-400 border border-slate-700">
+                            Chờ nạp file
+                        </span>
+                    </h1>
+                    <p class="text-[10px] sm:text-xs text-slate-400 mt-0.5 hidden sm:block">Trình phát Audio đồng bộ phụ đề VTT / SRT tự động</p>
+                </div>
+            </div>
+
+            <!-- Global Header Actions -->
+            <div class="flex items-center gap-2">
+                <button id="toggle-upload-btn" onclick="toggleUploadAccordion()" class="lg:hidden px-2.5 py-1.5 text-xs font-medium rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 flex items-center gap-1.5 transition">
+                    <i class="fa-solid fa-folder-open text-brand-400"></i>
+                    <span id="upload-btn-text">File Upload</span>
+                </button>
+                <button id="mode-shadowing-btn" onclick="toggleShadowingMode()" class="px-2.5 py-1.5 text-xs font-medium rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 flex items-center gap-1.5 transition">
+                    <i class="fa-solid fa-microphone text-rose-400"></i>
+                    <span id="shadowing-btn-text">Shadowing Off</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main class="flex-1 max-w-7xl w-full mx-auto p-2 sm:p-4 lg:p-6 grid grid-cols-1 lg:grid-cols-12 gap-3 sm:gap-6 overflow-hidden">
+
+        <!-- Left Column: Audio Controls & File Uploads -->
+        <div class="lg:col-span-5 flex flex-col gap-3 shrink-0 lg:overflow-y-auto custom-scrollbar">
+
+            <!-- Collapsible Upload Box -->
+            <div id="upload-panel" class="hidden lg:block bg-slate-900/90 border border-slate-800 rounded-xl p-3 sm:p-4 shadow-xl space-y-3">
+                <h2 class="text-[11px] font-bold uppercase tracking-wider text-slate-400 flex items-center justify-between">
+                    <span class="flex items-center gap-2"><i class="fa-solid fa-folder-open text-brand-500"></i> Nguồn Tệp Audio & Phụ Đề</span>
+                    <button class="lg:hidden text-slate-400 hover:text-white" onclick="toggleUploadAccordion()"><i class="fa-solid fa-xmark"></i></button>
+                </h2>
+
+                <!-- 1. Audio File Input -->
+                <div>
+                    <label class="block text-[11px] font-medium text-slate-300 mb-1 flex items-center justify-between">
+                        <span>1. Tệp Âm Thanh Audio (.mp3, .wav, .m4a)</span>
+                        <span id="audio-file-badge" class="text-[9px] text-amber-400 bg-amber-400/10 px-1 py-0.5 rounded border border-amber-400/20">Chưa nạp audio</span>
+                    </label>
+                    <div id="dropzone-audio" onclick="document.getElementById('audio-file-input').click()" class="border border-dashed border-slate-700 hover:border-brand-500 rounded-lg p-2.5 text-center cursor-pointer bg-slate-950/60 hover:bg-slate-950 transition flex items-center justify-center gap-2">
+                        <input type="file" id="audio-file-input" accept="audio/*" class="hidden" onchange="handleAudioSelect(event)">
+                        <i class="fa-solid fa-file-audio text-brand-400 text-lg"></i>
+                        <div class="text-left overflow-hidden">
+                            <p class="text-xs font-semibold text-slate-200 truncate" id="audio-name-display">Bấm để chọn file MP3 từ máy</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 2. Subtitle File Input -->
+                <div>
+                    <label class="block text-[11px] font-medium text-slate-300 mb-1 flex items-center justify-between">
+                        <span>2. Tệp Phụ Đề (.vtt, .srt)</span>
+                        <span id="vtt-file-badge" class="text-[9px] text-amber-400 bg-amber-400/10 px-1 py-0.5 rounded border border-amber-400/20">Chưa nạp phụ đề</span>
+                    </label>
+                    <div id="dropzone-vtt" onclick="document.getElementById('vtt-file-input').click()" class="border border-dashed border-slate-700 hover:border-brand-500 rounded-lg p-2.5 text-center cursor-pointer bg-slate-950/60 hover:bg-slate-950 transition flex items-center justify-center gap-2">
+                        <input type="file" id="vtt-file-input" accept=".vtt,.srt" class="hidden" onchange="handleVttSelect(event)">
+                        <i class="fa-solid fa-file-code text-indigo-400 text-lg"></i>
+                        <div class="text-left overflow-hidden">
+                            <p class="text-xs font-semibold text-slate-200 truncate" id="vtt-name-display">Bấm để chọn file .vtt hoặc .srt</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sticky Player Deck (Pinned on top on mobile) -->
+            <div class="bg-gradient-to-b from-slate-900 to-slate-950 border border-slate-800 rounded-xl p-3 sm:p-5 shadow-2xl relative">
+                
+                <!-- Audio Visualizer Canvas & Subtitle Box -->
+                <div class="relative h-16 sm:h-24 bg-slate-950 rounded-lg overflow-hidden mb-3 border border-slate-800/80 flex items-center justify-center">
+                    <canvas id="visualizer" class="w-full h-full absolute inset-0"></canvas>
+                    <div id="visualizer-overlay" class="relative z-10 text-center px-3">
+                        <p id="current-speaker-tag" class="text-[10px] sm:text-xs font-bold uppercase tracking-widest text-brand-400 mb-0.5">Studio Luyện Nghe</p>
+                        <p id="current-subtitle-preview" class="text-xs sm:text-sm font-medium text-slate-200 line-clamp-2 transition-all">Vui lòng tải lên file Audio (.mp3) và Phụ đề (.vtt / .srt) để bắt đầu</p>
+                    </div>
+                </div>
+
+                <!-- Hidden HTML Audio Element -->
+                <audio id="main-audio" preload="metadata"></audio>
+
+                <!-- Time Progress & Seek Bar -->
+                <div class="space-y-1 mb-3">
+                    <div class="flex justify-between text-[11px] text-slate-400 font-mono">
+                        <span id="time-display">00:00 / 00:00</span>
+                        <span id="sentence-counter-display" class="text-slate-300">Câu 0/0</span>
+                    </div>
+                    <div id="progress-bar-container" class="w-full h-3 sm:h-3 bg-slate-950 rounded-full cursor-pointer relative overflow-hidden group border border-slate-800 touch-none py-0.5">
+                        <div id="progress-bar" class="h-full bg-gradient-to-r from-brand-500 to-indigo-500 w-0 transition-all duration-75 rounded-full pointer-events-none"></div>
+                    </div>
+                </div>
+
+                <!-- Audio Transport Controls -->
+                <div class="flex items-center justify-between gap-2">
+                    <div class="relative">
+                        <button id="speed-btn" onclick="toggleSpeedMenu(event)" class="w-9 h-9 sm:w-10 sm:h-10 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 text-xs font-bold flex items-center justify-center transition" title="Chọn tốc độ phát">
+                            <span id="speed-text">1.0x</span>
+                        </button>
+                        <!-- Popup menu chọn tốc độ dạng Grid 3 cột gọn gàng không lo bị che logo -->
+                        <div id="speed-menu" class="hidden absolute bottom-full mb-2 left-0 bg-slate-900/95 backdrop-blur border border-slate-700 rounded-xl shadow-2xl p-1.5 z-[60] w-48 grid grid-cols-3 gap-1 text-xs">
+                            <button data-speed="0.5" onclick="setSpeed(0.5)" class="speed-opt py-1.5 px-1 text-center rounded bg-slate-800/80 hover:bg-slate-700 text-slate-300 font-medium transition">0.5x</button>
+                            <button data-speed="0.75" onclick="setSpeed(0.75)" class="speed-opt py-1.5 px-1 text-center rounded bg-slate-800/80 hover:bg-slate-700 text-slate-300 font-medium transition">0.75x</button>
+                            <button data-speed="1.0" onclick="setSpeed(1.0)" class="speed-opt py-1.5 px-1 text-center rounded bg-brand-500 text-white font-bold transition shadow-sm">1.0x</button>
+                            <button data-speed="1.25" onclick="setSpeed(1.25)" class="speed-opt py-1.5 px-1 text-center rounded bg-slate-800/80 hover:bg-slate-700 text-slate-300 font-medium transition">1.25x</button>
+                            <button data-speed="1.5" onclick="setSpeed(1.5)" class="speed-opt py-1.5 px-1 text-center rounded bg-slate-800/80 hover:bg-slate-700 text-slate-300 font-medium transition">1.5x</button>
+                            <button data-speed="2.0" onclick="setSpeed(2.0)" class="speed-opt py-1.5 px-1 text-center rounded bg-slate-800/80 hover:bg-slate-700 text-slate-300 font-medium transition">2.0x</button>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center gap-2 sm:gap-3">
+                        <button onclick="prevSentence()" class="w-9 h-9 sm:w-10 sm:h-10 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 flex items-center justify-center hover:text-white transition" title="Câu trước">
+                            <i class="fa-solid fa-backward-step text-xs sm:text-sm"></i>
+                        </button>
+
+                        <button id="play-pause-btn" onclick="togglePlayPause()" class="w-12 h-12 sm:w-14 sm:h-14 rounded-xl bg-gradient-to-tr from-brand-500 to-indigo-600 hover:from-brand-600 hover:to-indigo-700 text-white text-lg sm:text-xl flex items-center justify-center shadow-lg shadow-brand-500/30 hover:scale-105 active:scale-95 transition">
+                            <i id="play-icon" class="fa-solid fa-play ml-0.5"></i>
+                        </button>
+
+                        <button onclick="nextSentence()" class="w-9 h-9 sm:w-10 sm:h-10 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 flex items-center justify-center hover:text-white transition" title="Câu sau">
+                            <i class="fa-solid fa-forward-step text-xs sm:text-sm"></i>
+                        </button>
+                    </div>
+
+                    <button id="loop-sentence-btn" onclick="toggleSentenceLoop()" class="w-9 h-9 sm:w-10 sm:h-10 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 flex items-center justify-center hover:text-white transition" title="Lặp câu hiện tại">
+                        <i class="fa-solid fa-rotate-right text-xs"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Column: Subtitles Container -->
+        <div class="lg:col-span-7 flex flex-col flex-1 h-full min-h-0 overflow-hidden">
+            <div class="bg-slate-900/80 backdrop-blur border border-slate-800 rounded-xl flex flex-col h-full shadow-2xl overflow-hidden">
+                
+                <!-- Subtitles Header -->
+                <div class="p-3 sm:p-4 border-b border-slate-800 flex items-center justify-between bg-slate-950/60 shrink-0">
+                    <div class="flex items-center gap-2">
+                        <i class="fa-solid fa-align-left text-brand-400 text-sm sm:text-base"></i>
+                        <div>
+                            <h2 class="font-bold text-xs sm:text-sm text-white">Danh Sách Câu Phụ Đề</h2>
+                            <p id="total-cues-text" class="text-[10px] text-slate-400">Đang nạp phụ đề...</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-1.5 sm:gap-2">
+                        <button id="toggle-sub-vis-btn" onclick="toggleSubtitlesVisibility()" class="px-2.5 py-1 text-xs rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 hover:text-white transition flex items-center gap-1.5" title="Ẩn/Hiện chữ phụ đề">
+                            <i id="sub-vis-icon" class="fa-solid fa-eye text-indigo-400"></i>
+                            <span id="sub-vis-text" class="hidden sm:inline">Hiện Phụ Đề</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Subtitles Scroll List (Only this element scrolls!) -->
+                <div id="subtitles-container" class="flex-1 p-2 sm:p-4 overflow-y-auto space-y-2 custom-scrollbar bg-slate-950/20">
+                    <!-- Sentences generated dynamically -->
+                </div>
+
+                <!-- Subtitles Status Footer -->
+                <div class="p-2.5 bg-slate-950/90 border-t border-slate-800 text-xs text-slate-400 flex items-center justify-between shrink-0">
+                    <div id="speakers-legend" class="flex items-center gap-1.5 overflow-x-auto">
+                        <!-- Speaker Badges -->
+                    </div>
+                    <span id="mode-badge-text" class="px-2 py-0.5 rounded bg-brand-500/10 text-brand-400 border border-brand-500/20 font-medium text-[10px] shrink-0">
+                        Nghe Liên Tục
+                    </span>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <script>
+        // Application State (Starting empty, no pre-loaded default cues)
+        let subtitleCues = [];
+        let currentSentenceIndex = 0;
+        let isPlaying = false;
+        let audioLoaded = false;
+        let playbackSpeed = 1.0;
+        let isSentenceLoop = false;
+        let isShadowingMode = false;
+        let isSubtitlesVisible = true;
+        let isDraggingProgress = false;
+
+        // DOM Elements
+        const audioElement = document.getElementById('main-audio');
+        const playIcon = document.getElementById('play-icon');
+        const progressBar = document.getElementById('progress-bar');
+        const timeDisplay = document.getElementById('time-display');
+        const canvas = document.getElementById('visualizer');
+        const ctx = canvas.getContext('2d');
+
+        // Audio Context & Visualizer
+        let audioCtx = null;
+        let analyser = null;
+        let dataArray = null;
+
+        // Speaker color palette mapping
+        const speakerColors = {
+            'Martin': { bg: 'bg-sky-500/10', border: 'border-sky-500/30', text: 'text-sky-400', badgeBg: 'bg-sky-500' },
+            'Katherine': { bg: 'bg-purple-500/10', border: 'border-purple-500/30', text: 'text-purple-400', badgeBg: 'bg-purple-500' },
+            'Narrator': { bg: 'bg-amber-500/10', border: 'border-amber-500/30', text: 'text-amber-400', badgeBg: 'bg-amber-500' },
+            'Default': { bg: 'bg-slate-800/40', border: 'border-slate-700/50', text: 'text-brand-400', badgeBg: 'bg-brand-500' }
+        };
+
+        function parseTimestamp(timeStr) {
+            timeStr = timeStr.replace(',', '.').trim();
+            const parts = timeStr.split(':');
+            let seconds = 0;
+            if (parts.length === 3) {
+                seconds = parseFloat(parts[0]) * 3600 + parseFloat(parts[1]) * 60 + parseFloat(parts[2]);
+            } else if (parts.length === 2) {
+                seconds = parseFloat(parts[0]) * 60 + parseFloat(parts[1]);
+            }
+            return seconds;
+        }
+
+        function parseVTT(vttText) {
+            const cues = [];
+            const lines = vttText.split(/\r?\n/);
+            let i = 0;
+
+            while (i < lines.length) {
+                const line = lines[i].trim();
+
+                // Look for timestamp line e.g., 00:00:03.292 --> 00:00:05.545
+                if (line.includes('-->')) {
+                    const times = line.split('-->');
+                    const start = parseTimestamp(times[0]);
+                    const end = parseTimestamp(times[1]);
+
+                    i++;
+                    let cueText = '';
+                    while (i < lines.length && lines[i].trim() !== '') {
+                        cueText += (cueText ? ' ' : '') + lines[i].trim();
+                        i++;
+                    }
+
+                    // Extract speaker if available e.g., "Martin: Hey Kath"
+                    let speaker = 'Narrator';
+                    let text = cueText;
+
+                    const speakerMatch = cueText.match(/^([A-Za-z0-9\s]+):\s*(.*)/);
+                    if (speakerMatch) {
+                        speaker = speakerMatch[1].trim();
+                        text = speakerMatch[2].trim();
+                    } else if (!cueText.toLowerCase().includes('track')) {
+                        speaker = 'Speaker';
+                    }
+
+                    cues.push({ start, end, speaker, text });
+                } else {
+                    i++;
+                }
+            }
+            return cues;
+        }
+
+        function renderSubtitles() {
+            const container = document.getElementById('subtitles-container');
+            const legendContainer = document.getElementById('speakers-legend');
+            container.innerHTML = '';
+            legendContainer.innerHTML = '';
+
+            if (subtitleCues.length === 0) {
+                container.innerHTML = `
+                    <div class="h-full flex flex-col items-center justify-center text-center p-6 text-slate-500 space-y-3 min-h-[220px]">
+                        <div class="w-12 h-12 rounded-full bg-slate-900 border border-slate-800 flex items-center justify-center text-slate-400 text-xl">
+                            <i class="fa-solid fa-file-circle-plus"></i>
+                        </div>
+                        <div>
+                            <p class="text-sm font-semibold text-slate-300">Chưa có dữ liệu phụ đề</p>
+                            <p class="text-xs text-slate-500 mt-1 max-w-xs">Vui lòng chọn hoặc tải tệp phụ đề (.vtt, .srt) và tệp âm thanh (.mp3) ở bảng điều khiển.</p>
+                        </div>
+                    </div>
+                `;
+                document.getElementById('total-cues-text').innerText = 'Chưa có phụ đề';
+                return;
+            }
+
+            const speakersFound = new Set();
+
+            subtitleCues.forEach((cue, index) => {
+                speakersFound.add(cue.speaker);
+                const colorConfig = speakerColors[cue.speaker] || speakerColors['Default'];
+                const blurStyle = isSubtitlesVisible ? '' : 'blur-md select-none group-hover:blur-none transition-all duration-300';
+
+                const item = document.createElement('div');
+                item.id = `sentence-${index}`;
+                item.onclick = () => jumpToSentence(index);
+                item.className = `p-3 sm:p-3.5 rounded-xl border ${colorConfig.border} ${colorConfig.bg} hover:border-brand-500/50 cursor-pointer transition-all duration-200 group flex items-start gap-3`;
+
+                item.innerHTML = `
+                    <span class="text-[10px] font-mono text-slate-400 mt-0.5 px-1.5 py-0.5 rounded bg-slate-900 border border-slate-800 shrink-0">
+                        ${formatTime(cue.start)}
+                    </span>
+                    <div class="flex-1 overflow-hidden">
+                        <div class="flex items-center justify-between mb-1">
+                            <span class="text-[11px] font-bold ${colorConfig.text}">${cue.speaker}</span>
+                            <i class="fa-solid fa-play text-[10px] text-brand-400 opacity-0 group-hover:opacity-100 transition"></i>
+                        </div>
+                        <p class="text-xs sm:text-sm text-slate-200 leading-relaxed font-medium ${blurStyle}">${cue.text}</p>
+                    </div>
+                `;
+
+                container.appendChild(item);
+            });
+
+            // Speakers Legend Badges
+            speakersFound.forEach(speaker => {
+                const colorConfig = speakerColors[speaker] || speakerColors['Default'];
+                const badge = document.createElement('span');
+                badge.className = `inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold ${colorConfig.bg} ${colorConfig.text} border ${colorConfig.border} shrink-0`;
+                badge.innerHTML = `<span class="w-1.5 h-1.5 rounded-full ${colorConfig.badgeBg}"></span>${speaker}`;
+                legendContainer.appendChild(badge);
+            });
+
+            document.getElementById('total-cues-text').innerText = `Tổng số ${subtitleCues.length} câu thoại`;
+        }
+
+        function handleAudioSelect(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const url = URL.createObjectURL(file);
+                audioElement.src = url;
+                audioLoaded = true;
+
+                document.getElementById('audio-name-display').innerText = file.name;
+                document.getElementById('audio-file-badge').innerText = 'Audio Sẵn Sàng';
+                document.getElementById('audio-file-badge').className = 'text-[9px] text-emerald-400 bg-emerald-400/10 px-1 py-0.5 rounded border border-emerald-400/20';
+
+                // Setup Audio Visualizer node on user interaction
+                initAudioContext();
+            }
+        }
+
+        audioElement.onloadedmetadata = () => {
+            if (audioElement.duration) {
+                timeDisplay.innerText = `00:00 / ${formatTime(audioElement.duration)}`;
+            }
+        };
+
+        function handleVttSelect(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(evt) {
+                    subtitleCues = parseVTT(evt.target.result);
+                    renderSubtitles();
+                    currentSentenceIndex = 0;
+                    updateSentenceHighlight();
+                    document.getElementById('vtt-name-display').innerText = file.name;
+                    document.getElementById('vtt-file-badge').innerText = 'Phụ đề Sẵn Sàng';
+                    document.getElementById('vtt-file-badge').className = 'text-[9px] text-emerald-400 bg-emerald-400/10 px-1 py-0.5 rounded border border-emerald-400/20';
+                    document.getElementById('vtt-status-tag').innerText = `${subtitleCues.length} câu phụ đề`;
+                    document.getElementById('vtt-status-tag').className = 'text-[9px] sm:text-[10px] font-normal px-1.5 py-0.5 rounded bg-brand-500/20 text-brand-400 border border-brand-500/30';
+                };
+                reader.readAsText(file);
+            }
+        }
+
+        function initAudioContext() {
+            if (!audioCtx) {
+                const AudioContext = window.AudioContext || window.webkitAudioContext;
+                audioCtx = new AudioContext();
+                analyser = audioCtx.createAnalyser();
+                analyser.fftSize = 64;
+                const source = audioCtx.createMediaElementSource(audioElement);
+                source.connect(analyser);
+                analyser.connect(audioCtx.destination);
+                dataArray = new Uint8Array(analyser.frequencyBinCount);
+            }
+        }
+
+        function togglePlayPause() {
+            if (!audioLoaded) {
+                // If no file loaded yet, open file selection
+                document.getElementById('audio-file-input').click();
+                return;
+            }
+
+            if (audioCtx && audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+
+            if (isPlaying) {
+                audioElement.pause();
+            } else {
+                // If in shadowing mode and stopped at end of current sentence, step to next sentence before playing
+                if (isShadowingMode && subtitleCues.length > 0) {
+                    const currentCue = subtitleCues[currentSentenceIndex];
+                    if (currentCue && audioElement.currentTime >= currentCue.end - 0.15) {
+                        if (currentSentenceIndex < subtitleCues.length - 1) {
+                            currentSentenceIndex++;
+                            audioElement.currentTime = subtitleCues[currentSentenceIndex].start;
+                            updateSentenceHighlight();
+                        }
+                    }
+                }
+                audioElement.play();
+            }
+        }
+
+        function jumpToSentence(index) {
+            if (index < 0 || index >= subtitleCues.length) return;
+            currentSentenceIndex = index;
+            const cue = subtitleCues[index];
+
+            if (audioLoaded) {
+                audioElement.currentTime = cue.start;
+                updateAudioProgressAndCue(cue.start);
+                if (!isPlaying) {
+                    audioElement.play();
+                }
+            } else {
+                updateSentenceHighlight();
+            }
+        }
+
+        function prevSentence() {
+            if (currentSentenceIndex > 0) {
+                jumpToSentence(currentSentenceIndex - 1);
+            }
+        }
+
+        function nextSentence() {
+            if (currentSentenceIndex < subtitleCues.length - 1) {
+                jumpToSentence(currentSentenceIndex + 1);
+            }
+        }
+
+        function handleSeekFromEvent(event) {
+            if (!audioElement.duration) return;
+            const container = document.getElementById('progress-bar-container');
+            const rect = container.getBoundingClientRect();
+            const clientX = event.touches ? event.touches[0].clientX : event.clientX;
+            const clickX = Math.max(0, Math.min(clientX - rect.left, rect.width));
+            const ratio = clickX / rect.width;
+            const newTime = ratio * audioElement.duration;
+            
+            audioElement.currentTime = newTime;
+            updateAudioProgressAndCue(newTime);
+        }
+
+        function initProgressBarEvents() {
+            const container = document.getElementById('progress-bar-container');
+            if (!container) return;
+
+            // Mouse events
+            container.addEventListener('mousedown', (e) => {
+                isDraggingProgress = true;
+                handleSeekFromEvent(e);
+            });
+
+            window.addEventListener('mousemove', (e) => {
+                if (isDraggingProgress) {
+                    e.preventDefault();
+                    handleSeekFromEvent(e);
+                }
+            });
+
+            window.addEventListener('mouseup', () => {
+                if (isDraggingProgress) {
+                    isDraggingProgress = false;
+                }
+            });
+
+            // Touch events for mobile devices
+            container.addEventListener('touchstart', (e) => {
+                isDraggingProgress = true;
+                handleSeekFromEvent(e);
+            }, { passive: true });
+
+            window.addEventListener('touchmove', (e) => {
+                if (isDraggingProgress) {
+                    handleSeekFromEvent(e);
+                }
+            }, { passive: true });
+
+            window.addEventListener('touchend', () => {
+                if (isDraggingProgress) {
+                    isDraggingProgress = false;
+                }
+            });
+        }
+
+        function updateAudioProgressAndCue(currTime) {
+            if (audioElement.duration) {
+                const duration = audioElement.duration;
+                const percent = (currTime / duration) * 100;
+                progressBar.style.width = `${percent}%`;
+                timeDisplay.innerText = `${formatTime(currTime)} / ${formatTime(duration)}`;
+            }
+
+            if (subtitleCues.length === 0) return;
+
+            let foundIndex = subtitleCues.findIndex(cue => currTime >= cue.start && currTime <= cue.end);
+
+            if (foundIndex === -1) {
+                for (let i = 0; i < subtitleCues.length; i++) {
+                    if (currTime >= subtitleCues[i].start) {
+                        foundIndex = i;
+                    }
+                }
+            }
+
+            if (foundIndex !== -1) {
+                currentSentenceIndex = foundIndex;
+            }
+            updateSentenceHighlight();
+        }
+
+        function updateSentenceHighlight() {
+            if (subtitleCues.length === 0) {
+                document.getElementById('sentence-counter-display').innerText = 'Câu 0/0';
+                document.getElementById('current-speaker-tag').innerText = 'Studio Luyện Nghe';
+                document.getElementById('current-subtitle-preview').innerText = 'Vui lòng chọn file audio và file phụ đề để bắt đầu';
+                document.getElementById('current-subtitle-preview').className = 'text-xs sm:text-sm font-medium text-slate-200 line-clamp-2 transition-all';
+                return;
+            }
+
+            const activeCue = subtitleCues[currentSentenceIndex];
+
+            document.getElementById('sentence-counter-display').innerText = `Câu ${currentSentenceIndex + 1}/${subtitleCues.length}`;
+            document.getElementById('current-speaker-tag').innerText = activeCue.speaker;
+            
+            const previewEl = document.getElementById('current-subtitle-preview');
+            previewEl.innerText = activeCue.text;
+            if (isSubtitlesVisible) {
+                previewEl.className = 'text-xs sm:text-sm font-medium text-slate-200 line-clamp-2 transition-all';
+            } else {
+                previewEl.className = 'text-xs sm:text-sm font-medium text-slate-200 line-clamp-2 transition-all blur-md select-none hover:blur-none';
+            }
+
+            subtitleCues.forEach((_, idx) => {
+                const el = document.getElementById(`sentence-${idx}`);
+                if (el) {
+                    if (idx === currentSentenceIndex) {
+                        el.classList.add('active-sentence');
+                    } else {
+                        el.classList.remove('active-sentence');
+                    }
+                }
+            });
+
+            scrollToActiveSentence();
+        }
+
+        function toggleSubtitlesVisibility() {
+            isSubtitlesVisible = !isSubtitlesVisible;
+            const btnText = document.getElementById('sub-vis-text');
+            const btnIcon = document.getElementById('sub-vis-icon');
+            const btn = document.getElementById('toggle-sub-vis-btn');
+
+            if (isSubtitlesVisible) {
+                if (btnText) btnText.innerText = "Hiện Phụ Đề";
+                btnIcon.className = "fa-solid fa-eye text-indigo-400";
+                btn.className = "px-2.5 py-1 text-xs rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 hover:text-white transition flex items-center gap-1.5";
+            } else {
+                if (btnText) btnText.innerText = "Ẩn Phụ Đề";
+                btnIcon.className = "fa-solid fa-eye-slash text-rose-400";
+                btn.className = "px-2.5 py-1 text-xs rounded-lg bg-rose-950/80 hover:bg-rose-900 border border-rose-700/60 text-rose-300 transition flex items-center gap-1.5";
+            }
+
+            renderSubtitles();
+            updateSentenceHighlight();
+        }
+
+        // Custom container scrolling mechanism (No window jumping!)
+        function scrollToActiveSentence() {
+            const activeEl = document.getElementById(`sentence-${currentSentenceIndex}`);
+            const container = document.getElementById('subtitles-container');
+            if (activeEl && container) {
+                const elOffsetTop = activeEl.offsetTop - container.offsetTop;
+                const elHeight = activeEl.offsetHeight;
+                const containerHeight = container.clientHeight;
+
+                container.scrollTo({
+                    top: elOffsetTop - (containerHeight / 2) + (elHeight / 2),
+                    behavior: 'smooth'
+                });
+            }
+        }
+
+        function setSpeed(speed) {
+            playbackSpeed = speed;
+            audioElement.playbackRate = playbackSpeed;
+            const speedText = document.getElementById('speed-text');
+            if (speedText) speedText.innerText = `${playbackSpeed}x`;
+
+            // Highlight tốc độ đang chọn trong bảng grid
+            document.querySelectorAll('.speed-opt').forEach(opt => {
+                const optSpeed = parseFloat(opt.getAttribute('data-speed') || opt.innerText);
+                const isSelected = optSpeed === speed;
+                if (isSelected) {
+                    opt.className = 'speed-opt py-1.5 px-1 text-center rounded bg-brand-500 text-white font-bold transition shadow-sm';
+                } else {
+                    opt.className = 'speed-opt py-1.5 px-1 text-center rounded bg-slate-800/80 hover:bg-slate-700 text-slate-300 font-medium transition';
+                }
+            });
+
+            closeSpeedMenu();
+        }
+
+        function toggleSpeedMenu(event) {
+            if (event) event.stopPropagation();
+            const menu = document.getElementById('speed-menu');
+            if (menu) menu.classList.toggle('hidden');
+        }
+
+        function closeSpeedMenu() {
+            const menu = document.getElementById('speed-menu');
+            if (menu && !menu.classList.contains('hidden')) {
+                menu.classList.add('hidden');
+            }
+        }
+
+        // Tự đóng menu khi click ra ngoài
+        document.addEventListener('click', (e) => {
+            const speedBtn = document.getElementById('speed-btn');
+            const speedMenu = document.getElementById('speed-menu');
+            if (speedMenu && !speedMenu.contains(e.target) && speedBtn && !speedBtn.contains(e.target)) {
+                closeSpeedMenu();
+            }
+        });
+
+        function toggleSentenceLoop() {
+            isSentenceLoop = !isSentenceLoop;
+            const btn = document.getElementById('loop-sentence-btn');
+            if (isSentenceLoop) {
+                btn.className = "w-9 h-9 sm:w-10 sm:h-10 rounded-lg bg-brand-500 text-white border border-brand-400 flex items-center justify-center transition shadow-md shadow-brand-500/20";
+            } else {
+                btn.className = "w-9 h-9 sm:w-10 sm:h-10 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 flex items-center justify-center hover:text-white transition";
+            }
+        }
+
+        function toggleShadowingMode() {
+            isShadowingMode = !isShadowingMode;
+            const btn = document.getElementById('mode-shadowing-btn');
+            const badge = document.getElementById('mode-badge-text');
+
+            if (isShadowingMode) {
+                btn.className = "px-2.5 py-1.5 text-xs font-medium rounded-lg bg-rose-600 text-white border border-rose-500 shadow-md flex items-center gap-1.5 transition";
+                document.getElementById('shadowing-btn-text').innerText = "Shadowing On";
+                badge.innerText = "Chế độ Shadowing (Tự dừng ở cuối mỗi câu)";
+                badge.className = "px-2 py-0.5 rounded bg-rose-500/20 text-rose-300 border border-rose-500/30 font-medium text-[10px] shrink-0";
+            } else {
+                btn.className = "px-2.5 py-1.5 text-xs font-medium rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 flex items-center gap-1.5 transition";
+                document.getElementById('shadowing-btn-text').innerText = "Shadowing Off";
+                badge.innerText = "Nghe Liên Tục";
+                badge.className = "px-2 py-0.5 rounded bg-brand-500/10 text-brand-400 border border-brand-500/20 font-medium text-[10px] shrink-0";
+            }
+        }
+
+        function toggleUploadAccordion() {
+            const panel = document.getElementById('upload-panel');
+            const btnText = document.getElementById('upload-btn-text');
+            if (panel.classList.contains('hidden')) {
+                panel.classList.remove('hidden');
+                btnText.innerText = "Ẩn Upload";
+            } else {
+                panel.classList.add('hidden');
+                btnText.innerText = "File Upload";
+            }
+        }
+
+        function formatTime(seconds) {
+            if (isNaN(seconds)) return "00:00";
+            const mins = Math.floor(seconds / 60);
+            const secs = Math.floor(seconds % 60);
+            return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+        }
+
+        audioElement.ontimeupdate = () => {
+            if (!audioElement.duration) return;
+
+            const currTime = audioElement.currentTime;
+            updateAudioProgressAndCue(currTime);
+
+            if (subtitleCues.length === 0) return;
+
+            const activeCue = subtitleCues[currentSentenceIndex];
+
+            // High-precision checks are continuously verified in the RAF loop
+            if (isShadowingMode && activeCue && currTime >= activeCue.end) {
+                if (isPlaying) {
+                    audioElement.pause();
+                    audioElement.currentTime = activeCue.end;
+                }
+                return;
+            }
+
+            if (isSentenceLoop && activeCue && currTime >= activeCue.end) {
+                audioElement.currentTime = activeCue.start;
+                return;
+            }
+        };
+
+        audioElement.onseeked = () => {
+            updateAudioProgressAndCue(audioElement.currentTime);
+        };
+
+        audioElement.onplay = () => {
+            isPlaying = true;
+            playIcon.className = "fa-solid fa-pause";
+            drawVisualizer();
+        };
+
+        audioElement.onpause = () => {
+            isPlaying = false;
+            playIcon.className = "fa-solid fa-play ml-0.5";
+        };
+
+        audioElement.onended = () => {
+            isPlaying = false;
+            playIcon.className = "fa-solid fa-play ml-0.5";
+        };
+
+        // Visualizer Canvas Drawing & Millisecond-Precise Timing Loop
+        function resizeCanvas() {
+            if (canvas.parentElement) {
+                canvas.width = canvas.parentElement.clientWidth;
+                canvas.height = canvas.parentElement.clientHeight;
+            }
+        }
+        window.addEventListener('resize', resizeCanvas);
+
+        function checkHighPrecisionTime() {
+            if (!isPlaying || subtitleCues.length === 0) return;
+
+            const currTime = audioElement.currentTime;
+            const activeCue = subtitleCues[currentSentenceIndex];
+
+            if (activeCue) {
+                // Precise stopping for Shadowing mode down to exact milliseconds (e.g. 03.292)
+                if (isShadowingMode && currTime >= activeCue.end) {
+                    audioElement.pause();
+                    audioElement.currentTime = activeCue.end;
+                    return;
+                }
+
+                // Precise loop restart for Single Sentence Loop mode
+                if (isSentenceLoop && currTime >= activeCue.end) {
+                    audioElement.currentTime = activeCue.start;
+                    return;
+                }
+            }
+        }
+
+        function drawVisualizer() {
+            if (!isPlaying) {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                ctx.beginPath();
+                ctx.strokeStyle = 'rgba(51, 65, 85, 0.4)';
+                ctx.lineWidth = 2;
+                ctx.moveTo(0, canvas.height / 2);
+                ctx.lineTo(canvas.width, canvas.height / 2);
+                ctx.stroke();
+                return;
+            }
+
+            requestAnimationFrame(drawVisualizer);
+
+            // Execute high-frequency sub-second timestamp validation (60 FPS)
+            checkHighPrecisionTime();
+
+            if (analyser && dataArray) {
+                analyser.getByteFrequencyData(dataArray);
+            }
+
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            const time = Date.now() * 0.005;
+            const width = canvas.width;
+            const height = canvas.height;
+
+            for (let j = 0; j < 3; j++) {
+                ctx.beginPath();
+                ctx.lineWidth = 2 - j * 0.5;
+                ctx.strokeStyle = j === 0 ? 'rgba(14, 165, 233, 0.8)' : (j === 1 ? 'rgba(99, 102, 241, 0.5)' : 'rgba(244, 63, 94, 0.3)');
+
+                for (let x = 0; x < width; x += 6) {
+                    const amp = dataArray ? (dataArray[x % dataArray.length] / 255.0) * 18 : 10;
+                    const y = Math.sin(x * 0.02 + time + j) * amp * Math.cos(x * 0.01 + time * 0.5) + height / 2;
+                    if (x === 0) ctx.moveTo(x, y);
+                    else ctx.lineTo(x, y);
+                }
+                ctx.stroke();
+            }
+        }
+
+        // Spacebar shortcut to toggle play/pause
+        document.addEventListener('keydown', (e) => {
+            if (e.code === 'Space' && e.target === document.body) {
+                e.preventDefault();
+                togglePlayPause();
+            }
+        });
+
+        // Initialize application on window load (No sample cues loaded)
+        window.onload = function() {
+            resizeCanvas();
+            renderSubtitles();
+            updateSentenceHighlight();
+            drawVisualizer();
+            initProgressBarEvents();
+        };
+    </script>
+</body>
+</html>
