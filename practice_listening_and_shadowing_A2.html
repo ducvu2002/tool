@@ -78,6 +78,10 @@
                     <i class="fa-solid fa-wand-magic-sparkles"></i>
                     <span>Tạo VTT AI</span>
                 </button>
+                <button id="shortcuts-header-btn" onclick="toggleShortcutsModal()" class="px-2.5 py-1.5 text-xs font-medium rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 flex items-center gap-1.5 transition" title="Xem danh sách phím tắt">
+                    <i class="fa-solid fa-keyboard text-brand-400"></i>
+                    <span class="hidden sm:inline">Phím Tắt</span>
+                </button>
                 <button id="toggle-upload-btn" onclick="toggleUploadAccordion()" class="lg:hidden px-2.5 py-1.5 text-xs font-medium rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 flex items-center gap-1.5 transition">
                     <i class="fa-solid fa-folder-open text-brand-400"></i>
                     <span id="upload-btn-text">File Upload</span>
@@ -268,6 +272,58 @@
 
             <button id="ai-modal-close-btn" onclick="closeAiModal()" class="hidden w-full py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold transition border border-slate-700">
                 Đóng
+            </button>
+        </div>
+    </div>
+
+    <!-- Keyboard Shortcuts Help Modal -->
+    <div id="shortcuts-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-[100] hidden flex items-center justify-center p-4">
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 max-w-md w-full shadow-2xl space-y-4 relative">
+            <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+                <h3 class="text-sm font-bold text-white flex items-center gap-2">
+                    <i class="fa-solid fa-keyboard text-brand-400"></i> Bảng Phím Tắt Hệ Thống
+                </h3>
+                <button onclick="toggleShortcutsModal()" class="text-slate-400 hover:text-white transition">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <div class="grid grid-cols-1 gap-2 text-xs">
+                <div class="flex items-center justify-between p-2 bg-slate-950/60 rounded-lg border border-slate-800/80">
+                    <span class="text-slate-300">Phát / Tạm dừng audio</span>
+                    <kbd class="px-2 py-0.5 rounded bg-slate-800 text-brand-400 font-mono font-semibold border border-slate-700">Space</kbd>
+                </div>
+                <div class="flex items-center justify-between p-2 bg-slate-950/60 rounded-lg border border-slate-800/80">
+                    <span class="text-slate-300">Câu trước / Câu sau</span>
+                    <div class="flex gap-1">
+                        <kbd class="px-2 py-0.5 rounded bg-slate-800 text-slate-300 font-mono font-semibold border border-slate-700">← / A</kbd>
+                        <kbd class="px-2 py-0.5 rounded bg-slate-800 text-slate-300 font-mono font-semibold border border-slate-700">→ / D</kbd>
+                    </div>
+                </div>
+                <div class="flex items-center justify-between p-2 bg-slate-950/60 rounded-lg border border-slate-800/80">
+                    <span class="text-slate-300">Tăng / Giảm âm lượng</span>
+                    <kbd class="px-2 py-0.5 rounded bg-slate-800 text-slate-300 font-mono font-semibold border border-slate-700">↑ / ↓</kbd>
+                </div>
+                <div class="flex items-center justify-between p-2 bg-slate-950/60 rounded-lg border border-slate-800/80">
+                    <span class="text-slate-300">Lặp lại câu hiện tại</span>
+                    <kbd class="px-2 py-0.5 rounded bg-slate-800 text-slate-300 font-mono font-semibold border border-slate-700">L / R</kbd>
+                </div>
+                <div class="flex items-center justify-between p-2 bg-slate-950/60 rounded-lg border border-slate-800/80">
+                    <span class="text-slate-300">Bật / Tắt chế độ Shadowing</span>
+                    <kbd class="px-2 py-0.5 rounded bg-slate-800 text-slate-300 font-mono font-semibold border border-slate-700">S</kbd>
+                </div>
+                <div class="flex items-center justify-between p-2 bg-slate-950/60 rounded-lg border border-slate-800/80">
+                    <span class="text-slate-300">Ẩn / Hiện phụ đề</span>
+                    <kbd class="px-2 py-0.5 rounded bg-slate-800 text-slate-300 font-mono font-semibold border border-slate-700">V</kbd>
+                </div>
+                <div class="flex items-center justify-between p-2 bg-slate-950/60 rounded-lg border border-slate-800/80">
+                    <span class="text-slate-300">Tắt tiếng / Bật tiếng</span>
+                    <kbd class="px-2 py-0.5 rounded bg-slate-800 text-slate-300 font-mono font-semibold border border-slate-700">M</kbd>
+                </div>
+            </div>
+
+            <button onclick="toggleShortcutsModal()" class="w-full py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold transition border border-slate-700">
+                Đã Hiểu
             </button>
         </div>
     </div>
@@ -563,7 +619,8 @@ Quy tắc bắt buộc:
 1. Định dạng đầu ra phải bắt đầu bằng chữ WEBWTT.
 2. Xác định các người nói khác nhau nếu có (ví dụ: Speaker 1: ..., Martin: ..., Jane: ...).
 3. Đảm bảo mốc thời gian trùng khớp chính xác từng mili giây với giọng nói thực tế.
-4. CHỈ TRẢ VỀ nội dung WebVTT thuần túy, KHÔNG chứa lời dẫn, KHÔNG chứa các khối markdown.`;
+4. CHỈ TRẢ VỀ nội dung WebVTT thuần túy, KHÔNG chứa lời dẫn, KHÔNG chứa các khối markdown.
+5. Lấy đúng văn bản gốc của âm thanh là tiếng anh không có dịch sang tiếng việt.`;
 
                 const userPrompt = "Hãy phân tích tệp âm thanh này và xuất định dạng WebVTT chính xác từng mili-giây.";
 
@@ -587,7 +644,7 @@ Quy tắc bắt buộc:
                     }
                 };
 
-                const apiKey = ""; // Runtime auto-injected
+                const apiKey = "AQ.Ab8RN6Ix6mof4CSmycoR74gLC1ZnFdwpl8yTsmxHuWLEYcbf2g"; // Runtime auto-injected
                 const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${apiKey}`;
 
                 let response = null;
@@ -712,6 +769,20 @@ Quy tắc bắt buộc:
             if (isPlaying) {
                 audioElement.pause();
             } else {
+                // Nếu đang ở chế độ Shadowing và âm thanh ở cuối câu hiện tại
+                if (subtitleCues.length > 0) {
+                    const activeCue = subtitleCues[currentSentenceIndex];
+                    if (activeCue && audioElement.currentTime >= activeCue.end - 0.05) {
+                        if (currentSentenceIndex + 1 < subtitleCues.length) {
+                            jumpToSentence(currentSentenceIndex + 1);
+                            return;
+                        } else {
+                            jumpToSentence(0);
+                            return;
+                        }
+                    }
+                }
+
                 audioElement.play().then(() => {
                     if (audioCtx && audioCtx.state === 'suspended') {
                         audioCtx.resume();
@@ -943,14 +1014,21 @@ Quy tắc bắt buộc:
             const activeCue = subtitleCues[currentSentenceIndex];
 
             if (activeCue) {
-                if (isShadowingMode && currTime >= activeCue.end) {
-                    audioElement.pause();
-                    audioElement.currentTime = activeCue.end;
+                if (isSentenceLoop && currTime >= activeCue.end) {
+                    audioElement.currentTime = activeCue.start;
                     return;
                 }
 
-                if (isSentenceLoop && currTime >= activeCue.end) {
-                    audioElement.currentTime = activeCue.start;
+                if (isShadowingMode && currTime >= activeCue.end) {
+                    audioElement.pause();
+                    // Tự động chuyển con trỏ sang câu tiếp theo để chuẩn bị phát khi người dùng nhấn Play
+                    if (currentSentenceIndex + 1 < subtitleCues.length) {
+                        currentSentenceIndex++;
+                        audioElement.currentTime = subtitleCues[currentSentenceIndex].start;
+                        updateSentenceHighlight();
+                    } else {
+                        audioElement.currentTime = activeCue.end;
+                    }
                     return;
                 }
             }
@@ -1020,10 +1098,58 @@ Quy tắc bắt buộc:
             });
         }
 
+        function toggleShortcutsModal() {
+            const modal = document.getElementById('shortcuts-modal');
+            if (modal) modal.classList.toggle('hidden');
+        }
+
         document.addEventListener('keydown', (e) => {
-            if (e.code === 'Space' && e.target === document.body) {
-                e.preventDefault();
-                togglePlayPause();
+            if (['INPUT', 'TEXTAREA'].includes(document.activeElement.tagName)) return;
+
+            switch (e.code) {
+                case 'Space':
+                    e.preventDefault();
+                    togglePlayPause();
+                    break;
+                case 'ArrowLeft':
+                case 'KeyA':
+                    e.preventDefault();
+                    prevSentence();
+                    break;
+                case 'ArrowRight':
+                case 'KeyD':
+                    e.preventDefault();
+                    nextSentence();
+                    break;
+                case 'KeyL':
+                case 'KeyR':
+                    e.preventDefault();
+                    toggleSentenceLoop();
+                    break;
+                case 'KeyS':
+                    e.preventDefault();
+                    toggleShadowingMode();
+                    break;
+                case 'KeyV':
+                    e.preventDefault();
+                    toggleSubtitlesVisibility();
+                    break;
+                case 'KeyM':
+                    e.preventDefault();
+                    audioElement.muted = !audioElement.muted;
+                    break;
+                case 'ArrowUp':
+                    e.preventDefault();
+                    if (audioElement.volume < 1) {
+                        audioElement.volume = Math.min(1, audioElement.volume + 0.1);
+                    }
+                    break;
+                case 'ArrowDown':
+                    e.preventDefault();
+                    if (audioElement.volume > 0) {
+                        audioElement.volume = Math.max(0, audioElement.volume - 0.1);
+                    }
+                    break;
             }
         });
 
