@@ -644,8 +644,8 @@ Quy tắc bắt buộc:
                     }
                 };
 
-                const apiKey = "AQ.Ab8RN6Ibcl1yFYqLDs39yIozQ078_bur3Y8WIZ-5eXLjPFXGYA"; // Runtime auto-injected
-                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash-preview:generateContent`;
+                const apiKey = ""; // Runtime auto-injected
+                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${apiKey}`;
 
                 let response = null;
                 let retries = 0;
@@ -655,10 +655,7 @@ Quy tắc bắt buộc:
                     try {
                         response = await fetch(apiUrl, {
                             method: 'POST',
-                            headers: { 
-                                'Content-Type': 'application/json',
-                                'x-goog-api-key': apiKey 
-                            },
+                            headers: { 'Content-Type': 'application/json' },
                             body: JSON.stringify(payload)
                         });
                         if (response.ok) break;
