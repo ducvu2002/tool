@@ -644,7 +644,7 @@ Quy tắc bắt buộc:
                     }
                 };
 
-                const apiKey = "AQ.Ab8RN6Ix6mof4CSmycoR74gLC1ZnFdwpl8yTsmxHuWLEYcbf2g"; // Runtime auto-injected
+                const apiKey = ""; // Runtime auto-injected
                 const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${apiKey}`;
 
                 let response = null;
@@ -1021,14 +1021,8 @@ Quy tắc bắt buộc:
 
                 if (isShadowingMode && currTime >= activeCue.end) {
                     audioElement.pause();
-                    // Tự động chuyển con trỏ sang câu tiếp theo để chuẩn bị phát khi người dùng nhấn Play
-                    if (currentSentenceIndex + 1 < subtitleCues.length) {
-                        currentSentenceIndex++;
-                        audioElement.currentTime = subtitleCues[currentSentenceIndex].start;
-                        updateSentenceHighlight();
-                    } else {
-                        audioElement.currentTime = activeCue.end;
-                    }
+                    audioElement.currentTime = activeCue.end;
+                    updateSentenceHighlight();
                     return;
                 }
             }
