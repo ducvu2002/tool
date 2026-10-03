@@ -56,15 +56,15 @@
 <body class="bg-slate-950 text-slate-100 font-sans h-screen h-[100dvh] flex flex-col overflow-hidden antialiased selection:bg-brand-500 selection:text-white">
 
     <header class="border-b border-slate-800 bg-slate-900/90 backdrop-blur shrink-0 z-50">
-        <div class="max-w-7xl mx-auto px-2.5 sm:px-6 lg:px-8 h-14 flex items-center justify-between gap-2">
-            <div class="flex items-center gap-1.5 sm:gap-3 shrink-0 min-w-0">
-                <div class="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-tr from-brand-600 to-indigo-600 flex items-center justify-center text-white shadow-lg shadow-brand-500/20 shrink-0">
-                    <i class="fa-solid fa-sliders text-xs sm:text-lg"></i>
+        <div class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 h-14 sm:h-16 flex items-center justify-between">
+            <div class="flex items-center gap-2 sm:gap-3">
+                <div class="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-tr from-brand-600 to-indigo-600 flex items-center justify-center text-white shadow-lg shadow-brand-500/20">
+                    <i class="fa-solid fa-sliders text-sm sm:text-lg"></i>
                 </div>
-                <div class="min-w-0 flex-1">
-                    <h1 class="font-bold text-xs sm:text-base leading-tight text-white flex items-center gap-1 sm:gap-2 truncate">
-                        <span class="truncate">VTT Audio Studio</span>
-                        <span id="vtt-status-tag" class="text-[9px] font-normal px-1.5 py-0.5 rounded bg-slate-800 text-slate-400 border border-slate-700 truncate max-w-[80px] sm:max-w-none shrink-0">
+                <div>
+                    <h1 class="font-bold text-sm sm:text-lg leading-none text-white flex items-center gap-1.5 sm:gap-2">
+                        VTT Audio Studio
+                        <span id="vtt-status-tag" class="text-[9px] sm:text-[10px] font-normal px-1.5 py-0.5 rounded bg-slate-800 text-slate-400 border border-slate-700">
                             Chờ nạp file
                         </span>
                     </h1>
@@ -72,23 +72,23 @@
                 </div>
             </div>
 
-            <!-- Global Header Actions (Responsive for mobile viewports) -->
-            <div class="flex items-center gap-1 sm:gap-2 shrink-0">
-                <button id="ai-gen-header-btn" onclick="generateVTTWithAI()" class="px-2 sm:px-2.5 py-1.5 text-xs font-semibold rounded-lg bg-gradient-to-r from-amber-500 to-brand-500 hover:from-amber-600 hover:to-brand-600 text-white shadow-md flex items-center gap-1.5 transition active:scale-95 whitespace-nowrap" title="Tạo VTT Tự Động Bằng AI">
-                    <i class="fa-solid fa-wand-magic-sparkles text-amber-200"></i>
+            <!-- Global Header Actions -->
+            <div class="flex items-center gap-1.5 sm:gap-2">
+                <button id="ai-gen-header-btn" onclick="generateVTTWithAI()" class="px-2 sm:px-2.5 py-1.5 text-xs font-semibold rounded-lg bg-gradient-to-r from-amber-500 to-brand-500 hover:from-amber-600 hover:to-brand-600 text-white shadow-md flex items-center gap-1.5 transition active:scale-95" title="Tạo phụ đề tự động bằng AI">
+                    <i class="fa-solid fa-wand-magic-sparkles"></i>
                     <span class="hidden sm:inline">Tạo VTT AI</span>
                 </button>
-                <button id="shortcuts-header-btn" onclick="toggleShortcutsModal()" class="p-1.5 sm:px-2.5 sm:py-1.5 text-xs font-medium rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 flex items-center gap-1.5 transition whitespace-nowrap" title="Xem danh sách phím tắt">
+                <button id="shortcuts-header-btn" onclick="toggleShortcutsModal()" class="px-2 sm:px-2.5 py-1.5 text-xs font-medium rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 flex items-center gap-1.5 transition" title="Xem danh sách phím tắt">
                     <i class="fa-solid fa-keyboard text-brand-400"></i>
                     <span class="hidden sm:inline">Phím Tắt</span>
                 </button>
-                <button id="toggle-upload-btn" onclick="toggleUploadAccordion()" class="lg:hidden p-1.5 sm:px-2.5 sm:py-1.5 text-xs font-medium rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 flex items-center gap-1.5 transition whitespace-nowrap" title="Quản lý File Upload">
+                <button id="toggle-upload-btn" onclick="toggleUploadAccordion()" class="lg:hidden px-2 sm:px-2.5 py-1.5 text-xs font-medium rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 flex items-center gap-1.5 transition" title="Mở/Ẩn Nguồn Tệp Audio & Subtitle">
                     <i class="fa-solid fa-folder-open text-brand-400"></i>
-                    <span id="upload-btn-text" class="hidden xs:inline sm:inline">Upload</span>
+                    <span id="upload-btn-text" class="hidden sm:inline">File Upload</span>
                 </button>
-                <button id="mode-shadowing-btn" onclick="toggleShadowingMode()" class="p-1.5 sm:px-2.5 sm:py-1.5 text-xs font-medium rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 flex items-center gap-1.5 transition whitespace-nowrap" title="Chế độ Shadowing">
+                <button id="mode-shadowing-btn" onclick="toggleShadowingMode()" class="px-2 sm:px-2.5 py-1.5 text-xs font-medium rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 flex items-center gap-1.5 transition" title="Bật/Tắt Chế Độ Shadowing">
                     <i class="fa-solid fa-microphone text-rose-400"></i>
-                    <span id="shadowing-btn-text" class="hidden md:inline">Shadowing Off</span>
+                    <span id="shadowing-btn-text" class="hidden sm:inline">Shadowing Off</span>
                 </button>
             </div>
         </div>
@@ -169,57 +169,10 @@
                 </div>
 
                 <!-- Audio Transport Controls -->
-                <div class="flex items-center justify-between gap-1 sm:gap-2">
-                    <div class="relative shrink-0">
-                        <button id="speed-btn" onclick="toggleSpeedMenu(event)" class="w-8 h-8 sm:w-10 sm:h-10 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 text-[11px] sm:text-xs font-bold flex items-center justify-center transition" title="Chọn tốc độ phát">
+                <div class="flex items-center justify-between gap-2">
+                    <div class="relative">
+                        <button id="speed-btn" onclick="toggleSpeedMenu(event)" class="w-9 h-9 sm:w-10 sm:h-10 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 text-xs font-bold flex items-center justify-center transition" title="Chọn tốc độ phát">
                             <span id="speed-text">1.0x</span>
-                        </button>
-                        <!-- Speed Grid Menu -->
-                        <div id="speed-menu" class="hidden absolute bottom-full mb-2 left-0 bg-slate-900/95 backdrop-blur border border-slate-700 rounded-xl shadow-2xl p-1.5 z-[60] w-48 grid grid-cols-3 gap-1 text-xs">
-                            <button data-speed="0.5" onclick="setSpeed(0.5)" class="speed-opt py-1.5 px-1 text-center rounded bg-slate-800/80 hover:bg-slate-700 text-slate-300 font-medium transition">0.5x</button>
-                            <button data-speed="0.75" onclick="setSpeed(0.75)" class="speed-opt py-1.5 px-1 text-center rounded bg-slate-800/80 hover:bg-slate-700 text-slate-300 font-medium transition">0.75x</button>
-                            <button data-speed="1.0" onclick="setSpeed(1.0)" class="speed-opt py-1.5 px-1 text-center rounded bg-brand-500 text-white font-bold transition shadow-sm">1.0x</button>
-                            <button data-speed="1.25" onclick="setSpeed(1.25)" class="speed-opt py-1.5 px-1 text-center rounded bg-slate-800/80 hover:bg-slate-700 text-slate-300 font-medium transition">1.25x</button>
-                            <button data-speed="1.5" onclick="setSpeed(1.5)" class="speed-opt py-1.5 px-1 text-center rounded bg-slate-800/80 hover:bg-slate-700 text-slate-300 font-medium transition">1.5x</button>
-                            <button data-speed="2.0" onclick="setSpeed(2.0)" class="speed-opt py-1.5 px-1 text-center rounded bg-slate-800/80 hover:bg-slate-700 text-slate-300 font-medium transition">2.0x</button>
-                        </div>
-                    </div>
-
-                    <div class="flex items-center gap-1 sm:gap-1.5 flex-1 justify-center max-w-full overflow-x-auto no-scrollbar">
-                        <!-- Nút Replay phát lại câu vừa nghe (1 lần) -->
-                        <button id="replay-sentence-btn" onclick="replayCurrentSentence()" class="w-7 h-7 sm:w-9 sm:h-9 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 flex items-center justify-center hover:text-amber-400 active:scale-90 transition shrink-0" title="Phát lại ngay câu hiện tại 1 lần (Phím R)">
-                            <i class="fa-solid fa-arrow-rotate-left text-[10px] sm:text-xs"></i>
-                        </button>
-
-                        <button onclick="prevSentence()" class="w-7 h-7 sm:w-9 sm:h-9 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 flex items-center justify-center hover:text-white transition shrink-0" title="Câu trước (Phím ← / A)">
-                            <i class="fa-solid fa-backward-step text-[10px] sm:text-sm"></i>
-                        </button>
-
-                        <button id="play-pause-btn" onclick="togglePlayPause()" class="w-10 h-10 sm:w-13 sm:h-13 rounded-xl bg-gradient-to-tr from-brand-500 to-indigo-600 hover:from-brand-600 hover:to-indigo-700 text-white text-sm sm:text-lg flex items-center justify-center shadow-lg shadow-brand-500/30 hover:scale-105 active:scale-95 transition shrink-0">
-                            <i id="play-icon" class="fa-solid fa-play ml-0.5"></i>
-                        </button>
-
-                        <button onclick="nextSentence()" class="w-7 h-7 sm:w-9 sm:h-9 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 flex items-center justify-center hover:text-white transition shrink-0" title="Câu sau (Phím → / D)">
-                            <i class="fa-solid fa-forward-step text-[10px] sm:text-sm"></i>
-                        </button>
-
-                        <!-- Nút 1: Bật/Tắt Lặp LIÊN TỤC CÂU HIỆN TẠI (Biểu tượng có số 1) -->
-                        <button id="loop-sentence-btn" onclick="toggleSentenceLoop()" class="w-7 h-7 sm:w-9 sm:h-9 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 flex items-center justify-center hover:text-brand-400 transition relative shrink-0" title="Lặp đi lặp lại CÂU HIỆN TẠI (Phím L)">
-                            <i class="fa-solid fa-repeat text-[10px] sm:text-[11px]"></i>
-                            <span class="text-[8px] sm:text-[9px] font-black leading-none -ml-0.5 -mt-1 font-mono text-brand-400">1</span>
-                        </button>
-
-                        <!-- Nút 2: Bật/Tắt Lặp TOÀN BỘ BÀI AUDIO (Biểu tượng vô cực ∞) -->
-                        <button id="loop-track-btn" onclick="toggleTrackLoop()" class="w-7 h-7 sm:w-9 sm:h-9 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 flex items-center justify-center hover:text-indigo-400 transition shrink-0" title="Lặp lại TOÀN BỘ bài Audio (Shift + L)">
-                            <i class="fa-solid fa-infinity text-[10px] sm:text-xs"></i>
-                        </button>
-                    </div>
-
-                    <!-- Bộ điều khiển Loa & Khuếch Đại Âm Lượng 300% -->
-                    <div class="relative shrink-0">
-                        <button id="volume-boost-btn" onclick="toggleVolumeMenu(event)" class="w-8 h-8 sm:w-10 sm:h-10 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 text-xs font-bold flex flex-col items-center justify-center transition hover:text-amber-400" title="Điều chỉnh & Khuếch đại Loa lên 300%">
-                            <i id="volume-icon" class="fa-solid fa-volume-high text-[10px] sm:text-[11px]"></i>
-                            <span id="volume-text" class="text-[7px] sm:text-[8px] font-mono leading-none mt-0.5 text-slate-300">100%</span>
                         </button>
                         <!-- Speed Grid Menu -->
                         <div id="speed-menu" class="hidden absolute bottom-full mb-2 left-0 bg-slate-900/95 backdrop-blur border border-slate-700 rounded-xl shadow-2xl p-1.5 z-[60] w-48 grid grid-cols-3 gap-1 text-xs">
@@ -315,25 +268,25 @@
                     </div>
                     <div class="flex items-center gap-1.5 sm:gap-2 flex-wrap">
                         <!-- Add Cue Button (Visible in Edit Mode or when list is ready) -->
-                        <button id="add-cue-btn" onclick="addNewCue()" class="px-2.5 py-1 text-xs rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white font-medium transition flex items-center gap-1.5 shadow" title="Thêm câu phụ đề mới">
+                        <button id="add-cue-btn" onclick="addNewCue()" class="px-2 sm:px-2.5 py-1 text-xs rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white font-medium transition flex items-center gap-1.5 shadow" title="Thêm câu phụ đề mới">
                             <i class="fa-solid fa-plus"></i>
                             <span class="hidden sm:inline">Thêm Câu</span>
                         </button>
                         <!-- Undo Button -->
-                        <button id="undo-btn" onclick="undoLastAction()" disabled class="px-2.5 py-1 text-xs rounded-lg bg-slate-800 text-slate-500 border border-slate-700/60 font-medium transition flex items-center gap-1.5 shadow disabled:opacity-40 disabled:cursor-not-allowed hover:enabled:bg-slate-700 hover:enabled:text-white" title="Hoàn tác thao tác vừa rồi (Ctrl+Z)">
+                        <button id="undo-btn" onclick="undoLastAction()" disabled class="px-2 sm:px-2.5 py-1 text-xs rounded-lg bg-slate-800 text-slate-500 border border-slate-700/60 font-medium transition flex items-center gap-1.5 shadow disabled:opacity-40 disabled:cursor-not-allowed hover:enabled:bg-slate-700 hover:enabled:text-white" title="Hoàn tác thao tác vừa rồi (Ctrl+Z)">
                             <i class="fa-solid fa-rotate-left"></i>
                             <span class="hidden sm:inline">Hoàn tác</span>
                         </button>
                         <!-- Mode Switcher: Listening vs Edit -->
-                        <button id="toggle-edit-mode-btn" onclick="toggleEditMode()" class="px-2.5 py-1 text-xs rounded-lg bg-amber-600/20 hover:bg-amber-600/30 border border-amber-500/40 text-amber-300 font-medium transition flex items-center gap-1.5 shadow" title="Bật/Tắt chế độ chỉnh sửa phụ đề">
+                        <button id="toggle-edit-mode-btn" onclick="toggleEditMode()" class="px-2 sm:px-2.5 py-1 text-xs rounded-lg bg-amber-600/20 hover:bg-amber-600/30 border border-amber-500/40 text-amber-300 font-medium transition flex items-center gap-1.5 shadow" title="Bật/Tắt chế độ chỉnh sửa phụ đề">
                             <i id="edit-mode-icon" class="fa-solid fa-pen-to-square"></i>
-                            <span id="edit-mode-text">Sửa Phụ Đề</span>
+                            <span id="edit-mode-text" class="hidden sm:inline">Sửa Phụ Đề</span>
                         </button>
-                        <button id="download-vtt-btn" onclick="downloadCurrentVTT()" class="hidden px-2.5 py-1 text-xs rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-medium transition flex items-center gap-1.5 shadow" title="Tải xuống tệp .vtt">
+                        <button id="download-vtt-btn" onclick="downloadCurrentVTT()" class="hidden px-2 sm:px-2.5 py-1 text-xs rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-medium transition flex items-center gap-1.5 shadow" title="Tải xuống tệp .vtt">
                             <i class="fa-solid fa-download"></i>
                             <span class="hidden sm:inline">Tải VTT</span>
                         </button>
-                        <button id="toggle-sub-vis-btn" onclick="toggleSubtitlesVisibility()" class="px-2.5 py-1 text-xs rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 hover:text-white transition flex items-center gap-1.5" title="Ẩn/Hiện chữ phụ đề">
+                        <button id="toggle-sub-vis-btn" onclick="toggleSubtitlesVisibility()" class="px-2 sm:px-2.5 py-1 text-xs rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 hover:text-white transition flex items-center gap-1.5" title="Ẩn/Hiện chữ phụ đề">
                             <i id="sub-vis-icon" class="fa-solid fa-eye text-indigo-400"></i>
                             <span id="sub-vis-text" class="hidden sm:inline">Hiện Phụ Đề</span>
                         </button>
@@ -352,7 +305,7 @@
                     </div>
                     <div class="flex items-center gap-2 shrink-0">
                         <button id="sort-cues-btn" onclick="sortCuesByTime()" class="hidden px-2 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 font-medium text-[10px]" title="Sắp xếp danh sách phụ đề theo mốc thời gian">
-                            <i class="fa-solid fa-arrow-down-short-wide text-brand-400"></i> Sắp xếp thời gian
+                            <i class="fa-solid fa-arrow-down-short-wide text-brand-400"></i> <span class="hidden sm:inline">Sắp xếp</span>
                         </button>
                         <span id="mode-badge-text" class="px-2 py-0.5 rounded bg-brand-500/10 text-brand-400 border border-brand-500/20 font-medium text-[10px]">
                             Nghe Liên Tục
@@ -774,7 +727,7 @@
                                 <input type="text" value="${cue.speaker || ''}" onchange="updateCue(${index}, 'speaker', this.value)" placeholder="Người nói..." class="bg-slate-950 border border-slate-700/80 rounded px-2 py-1 text-xs text-brand-400 font-bold w-32 focus:outline-none focus:border-brand-500 transition">
                             </div>
                             <div class="flex items-center gap-1">
-                                ${canRestore ? `<button onclick="restoreCueToOriginal(${index})" class="px-2 py-1 rounded bg-amber-500/20 hover:bg-amber-500/30 border border-amber-500/40 text-amber-300 text-[10px] font-semibold transition flex items-center gap-1" title="Phục hồi lại câu này về ban đầu"><i class="fa-solid fa-rotate-left"></i> Phục hồi</button>` : ''}
+                                ${canRestore ? `<button onclick="restoreCueToOriginal(${index})" class="px-2 py-1 rounded bg-amber-500/20 hover:bg-amber-500/30 border border-amber-500/40 text-amber-300 text-[10px] font-semibold transition flex items-center gap-1" title="Phục hồi lại câu này về ban đầu"><i class="fa-solid fa-rotate-left"></i> <span class="hidden sm:inline">Phục hồi</span></button>` : ''}
                                 <button onclick="jumpToSentence(${index})" class="p-1.5 rounded bg-slate-800 hover:bg-slate-700 text-brand-400 hover:text-white text-xs transition" title="Phát audio từ mốc này"><i class="fa-solid fa-play"></i></button>
                                 <button onclick="addNewCue(${index})" class="p-1.5 rounded bg-slate-800 hover:bg-slate-700 text-emerald-400 hover:text-white text-xs transition" title="Thêm câu mới ngay phía sau"><i class="fa-solid fa-plus"></i></button>
                                 <button onclick="deleteCue(${index})" class="p-1.5 rounded bg-slate-800 hover:bg-slate-700 text-rose-400 hover:text-white text-xs transition" title="Xóa câu này"><i class="fa-solid fa-trash"></i></button>
@@ -785,15 +738,15 @@
                             <div class="flex items-center gap-1.5">
                                 <span class="text-slate-400 text-[10px] w-12 shrink-0 font-medium">Bắt đầu:</span>
                                 <input type="text" value="${formatTimestampForInput(cue.start)}" onchange="updateCue(${index}, 'start', this.value)" class="bg-slate-950 border border-slate-700/80 rounded px-2 py-1 text-xs font-mono text-slate-200 w-full focus:outline-none focus:border-brand-500 transition">
-                                <button onclick="setCueStartToCurrent(${index})" class="px-2 py-1 text-[10px] font-semibold rounded bg-brand-600/20 hover:bg-brand-600/40 text-brand-400 border border-brand-500/30 whitespace-nowrap transition flex items-center gap-1" title="Đặt mốc Bắt Đầu = Thời gian audio hiện tại">
-                                    <i class="fa-solid fa-stopwatch"></i> Sync
+                                <button onclick="setCueStartToCurrent(${index})" class="px-1.5 sm:px-2 py-1 text-[10px] font-semibold rounded bg-brand-600/20 hover:bg-brand-600/40 text-brand-400 border border-brand-500/30 whitespace-nowrap transition flex items-center gap-1" title="Đặt mốc Bắt Đầu = Thời gian audio hiện tại">
+                                    <i class="fa-solid fa-stopwatch"></i> <span class="hidden sm:inline">Sync</span>
                                 </button>
                             </div>
                             <div class="flex items-center gap-1.5">
                                 <span class="text-slate-400 text-[10px] w-12 shrink-0 font-medium">Kết thúc:</span>
                                 <input type="text" value="${formatTimestampForInput(cue.end)}" onchange="updateCue(${index}, 'end', this.value)" class="bg-slate-950 border border-slate-700/80 rounded px-2 py-1 text-xs font-mono text-slate-200 w-full focus:outline-none focus:border-brand-500 transition">
-                                <button onclick="setCueEndToCurrent(${index})" class="px-2 py-1 text-[10px] font-semibold rounded bg-brand-600/20 hover:bg-brand-600/40 text-brand-400 border border-brand-500/30 whitespace-nowrap transition flex items-center gap-1" title="Đặt mốc Kết Thúc = Thời gian audio hiện tại">
-                                    <i class="fa-solid fa-stopwatch"></i> Sync
+                                <button onclick="setCueEndToCurrent(${index})" class="px-1.5 sm:px-2 py-1 text-[10px] font-semibold rounded bg-brand-600/20 hover:bg-brand-600/40 text-brand-400 border border-brand-500/30 whitespace-nowrap transition flex items-center gap-1" title="Đặt mốc Kết Thúc = Thời gian audio hiện tại">
+                                    <i class="fa-solid fa-stopwatch"></i> <span class="hidden sm:inline">Sync</span>
                                 </button>
                             </div>
                         </div>
@@ -1325,14 +1278,14 @@ Quy tắc bắt buộc:
 
             if (isShadowingMode) {
                 if (btn) {
-                    btn.className = "p-1.5 sm:px-2.5 sm:py-1.5 text-xs font-medium rounded-lg bg-rose-600 text-white border border-rose-500 shadow-md flex items-center gap-1.5 transition whitespace-nowrap";
+                    btn.className = "px-2.5 py-1.5 text-xs font-medium rounded-lg bg-rose-600 text-white border border-rose-500 shadow-md flex items-center gap-1.5 transition";
                     document.getElementById('shadowing-btn-text').innerText = "Shadowing On";
                 }
                 badge.innerText = "Chế độ Shadowing (Tự dừng ở cuối câu)";
                 badge.className = "px-2 py-0.5 rounded bg-rose-500/20 text-rose-300 border border-rose-500/30 font-medium text-[10px] shrink-0";
             } else {
                 if (btn) {
-                    btn.className = "p-1.5 sm:px-2.5 sm:py-1.5 text-xs font-medium rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 flex items-center gap-1.5 transition whitespace-nowrap";
+                    btn.className = "px-2.5 py-1.5 text-xs font-medium rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 flex items-center gap-1.5 transition";
                     document.getElementById('shadowing-btn-text').innerText = "Shadowing Off";
                 }
                 badge.innerText = "Nghe Liên Tục";
