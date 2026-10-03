@@ -1133,6 +1133,15 @@ Quy tắc bắt buộc:
             const speakerTag = document.getElementById('current-speaker-tag');
             const sentenceCounter = document.getElementById('sentence-counter-display');
 
+            // Đồng bộ trạng thái Ẩn/Hiện phụ đề cho khung Xem trước ở giao diện điều khiển
+            if (previewText) {
+                if (isSubtitlesVisible) {
+                    previewText.classList.remove('blur-md', 'select-none', 'hover:blur-none');
+                } else {
+                    previewText.classList.add('blur-md', 'select-none', 'hover:blur-none');
+                }
+            }
+
             if (subtitleCues[currentSentenceIndex]) {
                 const activeCue = subtitleCues[currentSentenceIndex];
                 previewText.innerText = `"${activeCue.text}"`;
