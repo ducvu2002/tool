@@ -215,8 +215,40 @@
                         </button>
                     </div>
 
-                    <!-- Mở rộng khoảng trống để cân đối giao diện -->
-                    <div class="w-9 sm:w-10"></div>
+                    <!-- Bộ điều khiển Loa & Khuếch Đại Âm Lượng 300% -->
+                    <div class="relative">
+                        <button id="volume-boost-btn" onclick="toggleVolumeMenu(event)" class="w-9 h-9 sm:w-10 sm:h-10 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 text-xs font-bold flex flex-col items-center justify-center transition hover:text-amber-400" title="Điều chỉnh & Khuếch đại Loa lên 300%">
+                            <i id="volume-icon" class="fa-solid fa-volume-high text-[11px]"></i>
+                            <span id="volume-text" class="text-[8px] font-mono leading-none mt-0.5 text-slate-300">100%</span>
+                        </button>
+                        <!-- Menu Popover Chỉnh Âm Lượng & Gain 300% -->
+                        <div id="volume-menu" class="hidden absolute bottom-full mb-2 right-0 bg-slate-900/95 backdrop-blur border border-slate-700 rounded-xl shadow-2xl p-3 z-[60] w-56 text-xs space-y-2.5">
+                            <div class="flex items-center justify-between">
+                                <span class="font-semibold text-slate-200 flex items-center gap-1.5 text-[11px]">
+                                    <i id="vol-title-icon" class="fa-solid fa-bolt text-amber-400"></i> Khuếch Đại Âm Lượng
+                                </span>
+                                <span id="vol-percentage-label" class="font-mono text-amber-400 font-bold text-xs bg-amber-400/10 px-1.5 py-0.5 rounded border border-amber-400/20">100%</span>
+                            </div>
+                            
+                            <!-- Slider 0% - 300% -->
+                            <div class="space-y-1">
+                                <input type="range" id="volume-range-slider" min="0" max="300" step="5" value="100" oninput="setVolumeBoost(this.value)" class="w-full h-1.5 bg-slate-950 rounded-lg appearance-none cursor-pointer accent-amber-400">
+                                <div class="flex justify-between text-[9px] font-mono text-slate-400 px-0.5">
+                                    <span>0%</span>
+                                    <span class="text-slate-300">100%</span>
+                                    <span class="text-amber-400 font-bold">300% MAX</span>
+                                </div>
+                            </div>
+
+                            <!-- Quick Boost Presets -->
+                            <div class="grid grid-cols-4 gap-1 pt-1.5 border-t border-slate-800 text-[10px]">
+                                <button onclick="setVolumeBoost(100)" class="vol-opt py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 font-medium transition text-center">100%</button>
+                                <button onclick="setVolumeBoost(150)" class="vol-opt py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 font-medium transition text-center">150%</button>
+                                <button onclick="setVolumeBoost(200)" class="vol-opt py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 font-medium transition text-center">200%</button>
+                                <button onclick="setVolumeBoost(300)" class="vol-opt py-1 rounded bg-gradient-to-r from-amber-500 to-rose-500 hover:from-amber-600 hover:to-rose-600 text-white font-bold transition text-center shadow-sm">300%</button>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -393,6 +425,8 @@
         let audioLoaded = false;
         let selectedAudioFile = null;
         let playbackSpeed = 1.0;
+        let currentVolumeBoost = 100; // Tỷ lệ âm lượng (%) từ 0% tới 300%
+        let lastVolumeBeforeMute = 100; // Mức âm lượng trước khi tắt tiếng
         let isSentenceLoop = false;
         let isTrackLoop = false;
         let isShadowingMode = false;
@@ -403,6 +437,7 @@
         // DOM Elements & Audio References
         let audioElement = null;
         let audioCtx = null;
+        let gainNode = null; // Web Audio GainNode giúp tăng công suất âm lượng lên 300%
         let analyser = null;
         let dataArray = null;
         let canvas = null;
@@ -1281,14 +1316,100 @@ Quy tắc bắt buộc:
             if (!audioCtx && audioElement) {
                 const AudioContext = window.AudioContext || window.webkitAudioContext;
                 audioCtx = new AudioContext();
+                
+                // Khởi tạo GainNode để hỗ trợ khuếch đại lên 300% (3.0x gain)
+                gainNode = audioCtx.createGain();
+                gainNode.gain.value = currentVolumeBoost / 100;
+
                 analyser = audioCtx.createAnalyser();
                 analyser.fftSize = 64;
+
                 const source = audioCtx.createMediaElementSource(audioElement);
-                source.connect(analyser);
+                source.connect(gainNode);
+                gainNode.connect(analyser);
                 analyser.connect(audioCtx.destination);
+
                 dataArray = new Uint8Array(analyser.frequencyBinCount);
             }
         }
+
+        function setVolumeBoost(val) {
+            const percent = Math.min(300, Math.max(0, parseInt(val) || 0));
+            currentVolumeBoost = percent;
+
+            // Đặt mức Gain cho Web Audio hoặc fallback cho HTML Audio
+            if (gainNode) {
+                gainNode.gain.value = currentVolumeBoost / 100;
+            } else if (audioElement) {
+                audioElement.volume = Math.min(1, currentVolumeBoost / 100);
+            }
+            if (audioCtx && audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+
+            // Cập nhật giao diện nút bấm và slider
+            const textLabel = document.getElementById('volume-text');
+            const badgeLabel = document.getElementById('vol-percentage-label');
+            const slider = document.getElementById('volume-range-slider');
+            const icon = document.getElementById('volume-icon');
+            const btn = document.getElementById('volume-boost-btn');
+
+            if (textLabel) textLabel.innerText = `${percent}%`;
+            if (badgeLabel) badgeLabel.innerText = `${percent}%`;
+            if (slider) slider.value = percent;
+
+            if (percent === 0) {
+                if (icon) icon.className = "fa-solid fa-volume-xmark text-slate-500 text-[11px]";
+                if (textLabel) textLabel.className = "text-[8px] font-mono leading-none mt-0.5 text-slate-500";
+                if (btn) btn.className = "w-9 h-9 sm:w-10 sm:h-10 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-500 text-xs font-bold flex flex-col items-center justify-center transition";
+            } else if (percent > 100) {
+                if (icon) icon.className = "fa-solid fa-bolt text-amber-400 text-[11px] animate-pulse";
+                if (textLabel) textLabel.className = "text-[8px] font-mono leading-none mt-0.5 text-amber-400 font-bold";
+                if (btn) btn.className = "w-9 h-9 sm:w-10 sm:h-10 rounded-lg bg-slate-800 hover:bg-slate-700 border border-amber-500/50 text-amber-400 text-xs font-bold flex flex-col items-center justify-center transition shadow-md shadow-amber-500/10";
+            } else {
+                if (icon) icon.className = "fa-solid fa-volume-high text-[11px]";
+                if (textLabel) textLabel.className = "text-[8px] font-mono leading-none mt-0.5 text-slate-300";
+                if (btn) btn.className = "w-9 h-9 sm:w-10 sm:h-10 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 text-xs font-bold flex flex-col items-center justify-center transition hover:text-amber-400";
+            }
+        }
+
+        // Tắt tiếng / Khôi phục âm lượng trước đó
+        function toggleMute() {
+            if (currentVolumeBoost > 0) {
+                lastVolumeBeforeMute = currentVolumeBoost;
+                setVolumeBoost(0);
+            } else {
+                setVolumeBoost(lastVolumeBeforeMute > 0 ? lastVolumeBeforeMute : 100);
+            }
+        }
+
+        function toggleVolumeMenu(event) {
+            if (event) event.stopPropagation();
+            closeSpeedMenu(); // Tắt menu tốc độ nếu đang mở
+            const menu = document.getElementById('volume-menu');
+            if (menu) menu.classList.toggle('hidden');
+        }
+
+        function closeVolumeMenu() {
+            const menu = document.getElementById('volume-menu');
+            if (menu && !menu.classList.contains('hidden')) {
+                menu.classList.add('hidden');
+            }
+        }
+
+        document.addEventListener('click', (e) => {
+            const speedBtn = document.getElementById('speed-btn');
+            const speedMenu = document.getElementById('speed-menu');
+            if (speedMenu && !speedMenu.contains(e.target) && speedBtn && !speedBtn.contains(e.target)) {
+                closeSpeedMenu();
+            }
+
+            const volBtn = document.getElementById('volume-boost-btn');
+            const volMenu = document.getElementById('volume-menu');
+            if (volMenu && !volMenu.contains(e.target) && volBtn && !volBtn.contains(e.target)) {
+                closeVolumeMenu();
+            }
+        });
 
         function resizeCanvas() {
             if (canvas && canvas.parentElement) {
@@ -1440,19 +1561,15 @@ Quy tắc bắt buộc:
                     break;
                 case 'KeyM':
                     e.preventDefault();
-                    if (audioElement) audioElement.muted = !audioElement.muted;
+                    toggleMute();
                     break;
                 case 'ArrowUp':
                     e.preventDefault();
-                    if (audioElement && audioElement.volume < 1) {
-                        audioElement.volume = Math.min(1, audioElement.volume + 0.1);
-                    }
+                    setVolumeBoost(Math.min(300, currentVolumeBoost + 10));
                     break;
                 case 'ArrowDown':
                     e.preventDefault();
-                    if (audioElement && audioElement.volume > 0) {
-                        audioElement.volume = Math.max(0, audioElement.volume - 0.1);
-                    }
+                    setVolumeBoost(Math.max(0, currentVolumeBoost - 10));
                     break;
             }
         });
