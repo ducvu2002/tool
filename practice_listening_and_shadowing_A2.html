@@ -185,23 +185,38 @@
                         </div>
                     </div>
 
-                    <div class="flex items-center gap-2 sm:gap-3">
-                        <button onclick="prevSentence()" class="w-9 h-9 sm:w-10 sm:h-10 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 flex items-center justify-center hover:text-white transition" title="Câu trước">
+                    <div class="flex items-center gap-1 sm:gap-1.5">
+                        <!-- Nút Replay phát lại câu vừa nghe (1 lần) -->
+                        <button id="replay-sentence-btn" onclick="replayCurrentSentence()" class="w-8 h-8 sm:w-9 sm:h-9 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 flex items-center justify-center hover:text-amber-400 active:scale-90 transition" title="Phát lại ngay câu hiện tại 1 lần (Phím R)">
+                            <i class="fa-solid fa-arrow-rotate-left text-xs"></i>
+                        </button>
+
+                        <button onclick="prevSentence()" class="w-8 h-8 sm:w-9 sm:h-9 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 flex items-center justify-center hover:text-white transition" title="Câu trước (Phím ← / A)">
                             <i class="fa-solid fa-backward-step text-xs sm:text-sm"></i>
                         </button>
 
-                        <button id="play-pause-btn" onclick="togglePlayPause()" class="w-12 h-12 sm:w-14 sm:h-14 rounded-xl bg-gradient-to-tr from-brand-500 to-indigo-600 hover:from-brand-600 hover:to-indigo-700 text-white text-lg sm:text-xl flex items-center justify-center shadow-lg shadow-brand-500/30 hover:scale-105 active:scale-95 transition">
+                        <button id="play-pause-btn" onclick="togglePlayPause()" class="w-11 h-11 sm:w-13 sm:h-13 rounded-xl bg-gradient-to-tr from-brand-500 to-indigo-600 hover:from-brand-600 hover:to-indigo-700 text-white text-base sm:text-lg flex items-center justify-center shadow-lg shadow-brand-500/30 hover:scale-105 active:scale-95 transition">
                             <i id="play-icon" class="fa-solid fa-play ml-0.5"></i>
                         </button>
 
-                        <button onclick="nextSentence()" class="w-9 h-9 sm:w-10 sm:h-10 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 flex items-center justify-center hover:text-white transition" title="Câu sau">
+                        <button onclick="nextSentence()" class="w-8 h-8 sm:w-9 sm:h-9 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 flex items-center justify-center hover:text-white transition" title="Câu sau (Phím → / D)">
                             <i class="fa-solid fa-forward-step text-xs sm:text-sm"></i>
+                        </button>
+
+                        <!-- Nút 1: Bật/Tắt Lặp LIÊN TỤC CÂU HIỆN TẠI (Biểu tượng có số 1) -->
+                        <button id="loop-sentence-btn" onclick="toggleSentenceLoop()" class="w-8 h-8 sm:w-9 sm:h-9 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 flex items-center justify-center hover:text-brand-400 transition relative" title="Lặp đi lặp lại CÂU HIỆN TẠI (Phím L)">
+                            <i class="fa-solid fa-repeat text-[11px]"></i>
+                            <span class="text-[9px] font-black leading-none -ml-0.5 -mt-1 font-mono text-brand-400">1</span>
+                        </button>
+
+                        <!-- Nút 2: Bật/Tắt Lặp TOÀN BỘ BÀI AUDIO (Biểu tượng vô cực ∞) -->
+                        <button id="loop-track-btn" onclick="toggleTrackLoop()" class="w-8 h-8 sm:w-9 sm:h-9 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 flex items-center justify-center hover:text-indigo-400 transition" title="Lặp lại TOÀN BỘ bài Audio (Shift + L)">
+                            <i class="fa-solid fa-infinity text-xs"></i>
                         </button>
                     </div>
 
-                    <button id="loop-sentence-btn" onclick="toggleSentenceLoop()" class="w-9 h-9 sm:w-10 sm:h-10 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 flex items-center justify-center hover:text-white transition" title="Lặp câu hiện tại">
-                        <i class="fa-solid fa-rotate-right text-xs"></i>
-                    </button>
+                    <!-- Mở rộng khoảng trống để cân đối giao diện -->
+                    <div class="w-9 sm:w-10"></div>
                 </div>
             </div>
         </div>
@@ -211,7 +226,7 @@
             <div class="bg-slate-900/80 backdrop-blur border border-slate-800 rounded-xl flex flex-col h-full shadow-2xl overflow-hidden">
                 
                 <!-- Subtitles Header -->
-                <div class="p-3 sm:p-4 border-b border-slate-800 flex items-center justify-between bg-slate-950/60 shrink-0">
+                <div class="p-3 sm:p-4 border-b border-slate-800 flex items-center justify-between bg-slate-950/60 shrink-0 flex-wrap gap-2">
                     <div class="flex items-center gap-2">
                         <i class="fa-solid fa-align-left text-brand-400 text-sm sm:text-base"></i>
                         <div>
@@ -219,7 +234,22 @@
                             <p id="total-cues-text" class="text-[10px] text-slate-400">Chưa có phụ đề</p>
                         </div>
                     </div>
-                    <div class="flex items-center gap-1.5 sm:gap-2">
+                    <div class="flex items-center gap-1.5 sm:gap-2 flex-wrap">
+                        <!-- Add Cue Button (Visible in Edit Mode or when list is ready) -->
+                        <button id="add-cue-btn" onclick="addNewCue()" class="px-2.5 py-1 text-xs rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white font-medium transition flex items-center gap-1.5 shadow" title="Thêm câu phụ đề mới">
+                            <i class="fa-solid fa-plus"></i>
+                            <span class="hidden sm:inline">Thêm Câu</span>
+                        </button>
+                        <!-- Undo Button -->
+                        <button id="undo-btn" onclick="undoLastAction()" disabled class="px-2.5 py-1 text-xs rounded-lg bg-slate-800 text-slate-500 border border-slate-700/60 font-medium transition flex items-center gap-1.5 shadow disabled:opacity-40 disabled:cursor-not-allowed hover:enabled:bg-slate-700 hover:enabled:text-white" title="Hoàn tác thao tác vừa rồi (Ctrl+Z)">
+                            <i class="fa-solid fa-rotate-left"></i>
+                            <span class="hidden sm:inline">Hoàn tác</span>
+                        </button>
+                        <!-- Mode Switcher: Listening vs Edit -->
+                        <button id="toggle-edit-mode-btn" onclick="toggleEditMode()" class="px-2.5 py-1 text-xs rounded-lg bg-amber-600/20 hover:bg-amber-600/30 border border-amber-500/40 text-amber-300 font-medium transition flex items-center gap-1.5 shadow" title="Bật/Tắt chế độ chỉnh sửa phụ đề">
+                            <i id="edit-mode-icon" class="fa-solid fa-pen-to-square"></i>
+                            <span id="edit-mode-text">Sửa Phụ Đề</span>
+                        </button>
                         <button id="download-vtt-btn" onclick="downloadCurrentVTT()" class="hidden px-2.5 py-1 text-xs rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-medium transition flex items-center gap-1.5 shadow" title="Tải xuống tệp .vtt">
                             <i class="fa-solid fa-download"></i>
                             <span class="hidden sm:inline">Tải VTT</span>
@@ -241,9 +271,14 @@
                     <div id="speakers-legend" class="flex items-center gap-1.5 overflow-x-auto">
                         <!-- Speaker Badges -->
                     </div>
-                    <span id="mode-badge-text" class="px-2 py-0.5 rounded bg-brand-500/10 text-brand-400 border border-brand-500/20 font-medium text-[10px] shrink-0">
-                        Nghe Liên Tục
-                    </span>
+                    <div class="flex items-center gap-2 shrink-0">
+                        <button id="sort-cues-btn" onclick="sortCuesByTime()" class="hidden px-2 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 font-medium text-[10px]" title="Sắp xếp danh sách phụ đề theo mốc thời gian">
+                            <i class="fa-solid fa-arrow-down-short-wide text-brand-400"></i> Sắp xếp thời gian
+                        </button>
+                        <span id="mode-badge-text" class="px-2 py-0.5 rounded bg-brand-500/10 text-brand-400 border border-brand-500/20 font-medium text-[10px]">
+                            Nghe Liên Tục
+                        </span>
+                    </div>
                 </div>
             </div>
         </div>
@@ -278,17 +313,37 @@
 
     <!-- Keyboard Shortcuts Help Modal -->
     <div id="shortcuts-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-[100] hidden flex items-center justify-center p-4">
-        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 max-w-md w-full shadow-2xl space-y-4 relative">
-            <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 sm:p-5 max-w-md w-full max-h-[85vh] flex flex-col shadow-2xl relative overflow-hidden">
+            <div class="flex items-center justify-between border-b border-slate-800 pb-3 shrink-0">
                 <h3 class="text-sm font-bold text-white flex items-center gap-2">
                     <i class="fa-solid fa-keyboard text-brand-400"></i> Bảng Phím Tắt Hệ Thống
                 </h3>
-                <button onclick="toggleShortcutsModal()" class="text-slate-400 hover:text-white transition">
+                <button onclick="toggleShortcutsModal()" class="text-slate-400 hover:text-white transition p-1">
                     <i class="fa-solid fa-xmark"></i>
                 </button>
             </div>
 
-            <div class="grid grid-cols-1 gap-2 text-xs">
+            <div class="flex-1 overflow-y-auto custom-scrollbar my-3 pr-1 space-y-2 text-xs">
+                <div class="flex items-center justify-between p-2 bg-slate-950/60 rounded-lg border border-slate-800/80">
+                    <span class="text-slate-300">Phát lại câu hiện tại (1 lần)</span>
+                    <kbd class="px-2 py-0.5 rounded bg-slate-800 text-amber-400 font-mono font-semibold border border-slate-700">R</kbd>
+                </div>
+                <div class="flex items-center justify-between p-2 bg-slate-950/60 rounded-lg border border-slate-800/80">
+                    <span class="text-slate-300">Bật / Tắt Lặp liên tục câu hiện tại</span>
+                    <kbd class="px-2 py-0.5 rounded bg-slate-800 text-brand-400 font-mono font-semibold border border-slate-700">L</kbd>
+                </div>
+                <div class="flex items-center justify-between p-2 bg-slate-950/60 rounded-lg border border-slate-800/80">
+                    <span class="text-slate-300">Bật / Tắt Lặp toàn bộ Audio</span>
+                    <kbd class="px-2 py-0.5 rounded bg-slate-800 text-indigo-400 font-mono font-semibold border border-slate-700">Shift + L</kbd>
+                </div>
+                <div class="flex items-center justify-between p-2 bg-slate-950/60 rounded-lg border border-slate-800/80">
+                    <span class="text-slate-300">Hoàn tác / Phục hồi giá trị cũ</span>
+                    <kbd class="px-2 py-0.5 rounded bg-slate-800 text-slate-300 font-mono font-semibold border border-slate-700">Ctrl + Z</kbd>
+                </div>
+                <div class="flex items-center justify-between p-2 bg-slate-950/60 rounded-lg border border-slate-800/80">
+                    <span class="text-slate-300">Bật / Tắt chế độ Sửa Phụ Đề</span>
+                    <kbd class="px-2 py-0.5 rounded bg-slate-800 text-amber-400 font-mono font-semibold border border-slate-700">E</kbd>
+                </div>
                 <div class="flex items-center justify-between p-2 bg-slate-950/60 rounded-lg border border-slate-800/80">
                     <span class="text-slate-300">Phát / Tạm dừng audio</span>
                     <kbd class="px-2 py-0.5 rounded bg-slate-800 text-brand-400 font-mono font-semibold border border-slate-700">Space</kbd>
@@ -305,12 +360,8 @@
                     <kbd class="px-2 py-0.5 rounded bg-slate-800 text-slate-300 font-mono font-semibold border border-slate-700">↑ / ↓</kbd>
                 </div>
                 <div class="flex items-center justify-between p-2 bg-slate-950/60 rounded-lg border border-slate-800/80">
-                    <span class="text-slate-300">Lặp lại câu hiện tại</span>
-                    <kbd class="px-2 py-0.5 rounded bg-slate-800 text-slate-300 font-mono font-semibold border border-slate-700">L / R</kbd>
-                </div>
-                <div class="flex items-center justify-between p-2 bg-slate-950/60 rounded-lg border border-slate-800/80">
                     <span class="text-slate-300">Bật / Tắt chế độ Shadowing</span>
-                    <kbd class="px-2 py-0.5 rounded bg-slate-800 text-slate-300 font-mono font-semibold border border-slate-700">S</kbd>
+                    <kbd class="px-2 py-0.5 rounded bg-slate-800 text-rose-400 font-mono font-semibold border border-slate-700">S</kbd>
                 </div>
                 <div class="flex items-center justify-between p-2 bg-slate-950/60 rounded-lg border border-slate-800/80">
                     <span class="text-slate-300">Ẩn / Hiện phụ đề</span>
@@ -322,127 +373,275 @@
                 </div>
             </div>
 
-            <button onclick="toggleShortcutsModal()" class="w-full py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold transition border border-slate-700">
-                Đã Hiểu
-            </button>
+            <div class="pt-2 border-t border-slate-800 shrink-0">
+                <button onclick="toggleShortcutsModal()" class="w-full py-2.5 rounded-xl bg-brand-600 hover:bg-brand-500 text-white text-xs font-semibold transition border border-brand-500 shadow-md">
+                    Đã Hiểu
+                </button>
+            </div>
         </div>
     </div>
 
     <script>
         // Application State
         let subtitleCues = [];
+        let originalCuesSnapshot = []; // Snapshot bản gốc ban đầu
+        let historyStack = []; // Lịch sử các bước sửa đổi
+        const MAX_HISTORY = 30;
+
         let currentSentenceIndex = 0;
         let isPlaying = false;
         let audioLoaded = false;
         let selectedAudioFile = null;
         let playbackSpeed = 1.0;
         let isSentenceLoop = false;
+        let isTrackLoop = false;
         let isShadowingMode = false;
         let isSubtitlesVisible = true;
+        let isEditMode = false;
         let isDraggingProgress = false;
 
-        // DOM References
-        const audioElement = document.getElementById('main-audio');
-        const playIcon = document.getElementById('play-icon');
-        const progressBar = document.getElementById('progress-bar');
-        const timeDisplay = document.getElementById('time-display');
-        const canvas = document.getElementById('visualizer');
-        const ctx = canvas.getContext('2d');
-
-        // Audio Context & Visualizer Nodes
+        // DOM Elements & Audio References
+        let audioElement = null;
         let audioCtx = null;
         let analyser = null;
         let dataArray = null;
+        let canvas = null;
+        let ctx = null;
+        let progressBar = null;
+        let timeDisplay = null;
+        let playIcon = null;
 
-        // Speaker Color Palette
-        const colorPaletteList = [
-            { bg: 'bg-sky-500/10', border: 'border-sky-500/30', text: 'text-sky-400', badgeBg: 'bg-sky-500' },
-            { bg: 'bg-purple-500/10', border: 'border-purple-500/30', text: 'text-purple-400', badgeBg: 'bg-purple-500' },
-            { bg: 'bg-emerald-500/10', border: 'border-emerald-500/30', text: 'text-emerald-400', badgeBg: 'bg-emerald-500' },
-            { bg: 'bg-amber-500/10', border: 'border-amber-500/30', text: 'text-amber-400', badgeBg: 'bg-amber-500' },
-            { bg: 'bg-rose-500/10', border: 'border-rose-500/30', text: 'text-rose-400', badgeBg: 'bg-rose-500' },
-            { bg: 'bg-indigo-500/10', border: 'border-indigo-500/30', text: 'text-indigo-400', badgeBg: 'bg-indigo-500' },
-            { bg: 'bg-teal-500/10', border: 'border-teal-500/30', text: 'text-teal-400', badgeBg: 'bg-teal-500' },
-            { bg: 'bg-fuchsia-500/10', border: 'border-fuchsia-500/30', text: 'text-fuchsia-400', badgeBg: 'bg-fuchsia-500' },
-            { bg: 'bg-orange-500/10', border: 'border-orange-500/30', text: 'text-orange-400', badgeBg: 'bg-orange-500' },
-            { bg: 'bg-cyan-500/10', border: 'border-cyan-500/30', text: 'text-cyan-400', badgeBg: 'bg-cyan-500' },
-            { bg: 'bg-pink-500/10', border: 'border-pink-500/30', text: 'text-pink-400', badgeBg: 'bg-pink-500' },
-            { bg: 'bg-lime-500/10', border: 'border-lime-500/30', text: 'text-lime-400', badgeBg: 'bg-lime-500' }
+        const SPEAKER_COLORS = [
+            { bg: 'bg-indigo-500/10', border: 'border-indigo-500/30', text: 'text-indigo-400', badgeBg: 'bg-indigo-400' },
+            { bg: 'bg-brand-500/10', border: 'border-brand-500/30', text: 'text-brand-400', badgeBg: 'bg-brand-400' },
+            { bg: 'bg-emerald-500/10', border: 'border-emerald-500/30', text: 'text-emerald-400', badgeBg: 'bg-emerald-400' },
+            { bg: 'bg-amber-500/10', border: 'border-amber-500/30', text: 'text-amber-400', badgeBg: 'bg-amber-400' },
+            { bg: 'bg-rose-500/10', border: 'border-rose-500/30', text: 'text-rose-400', badgeBg: 'bg-rose-400' },
+            { bg: 'bg-purple-500/10', border: 'border-purple-500/30', text: 'text-purple-400', badgeBg: 'bg-purple-400' }
         ];
 
-        const speakerColorsCache = {};
-
         function getSpeakerColor(speaker) {
-            const speakerName = (speaker || 'Speaker').trim();
-            if (speakerColorsCache[speakerName]) {
-                return speakerColorsCache[speakerName];
-            }
-
+            if (!speaker) return SPEAKER_COLORS[0];
             let hash = 0;
-            for (let i = 0; i < speakerName.length; i++) {
-                hash = speakerName.charCodeAt(i) + ((hash << 5) - hash);
+            for (let i = 0; i < speaker.length; i++) {
+                hash = speaker.charCodeAt(i) + ((hash << 5) - hash);
             }
-            const index = Math.abs(hash) % colorPaletteList.length;
-            const color = colorPaletteList[index];
-            speakerColorsCache[speakerName] = color;
-            return color;
+            const index = Math.abs(hash) % SPEAKER_COLORS.length;
+            return SPEAKER_COLORS[index];
         }
 
-        function parseTimestamp(timeStr) {
-            if (!timeStr) return 0;
-            timeStr = timeStr.replace(',', '.').trim();
-            const parts = timeStr.split(':');
+        function parseInputTimestamp(str) {
+            if (typeof str === 'number') return str;
+            if (!str) return 0;
+            const cleanStr = str.toString().replace(',', '.').trim();
+            const parts = cleanStr.split(':');
             let seconds = 0;
+
             if (parts.length === 3) {
                 seconds = parseFloat(parts[0]) * 3600 + parseFloat(parts[1]) * 60 + parseFloat(parts[2]);
             } else if (parts.length === 2) {
                 seconds = parseFloat(parts[0]) * 60 + parseFloat(parts[1]);
+            } else {
+                seconds = parseFloat(cleanStr) || 0;
             }
+
             return isNaN(seconds) ? 0 : seconds;
+        }
+
+        function formatTimestampForInput(seconds) {
+            return formatVttTimestamp(seconds);
         }
 
         function parseVTT(vttText) {
             const cues = [];
-            if (!vttText) return cues;
-            const lines = vttText.split(/\r?\n/);
+            const lines = vttText.replace(/\r\n/g, '\n').replace(/\r/g, '\n').split('\n');
             let i = 0;
 
             while (i < lines.length) {
-                const line = lines[i].trim();
+                let line = lines[i].trim();
+
+                if (!line || line.startsWith('WEBVTT') || line.startsWith('NOTE')) {
+                    i++;
+                    continue;
+                }
 
                 if (line.includes('-->')) {
-                    const times = line.split('-->');
-                    const start = parseTimestamp(times[0]);
-                    const end = parseTimestamp(times[1]);
+                    const timeParts = line.split('-->');
+                    const start = parseInputTimestamp(timeParts[0].trim());
+                    const end = parseInputTimestamp(timeParts[1].trim().split(' ')[0]);
 
                     i++;
-                    let cueText = '';
+                    let textLines = [];
                     while (i < lines.length && lines[i].trim() !== '') {
-                        cueText += (cueText ? ' ' : '') + lines[i].trim();
+                        textLines.push(lines[i].trim());
                         i++;
                     }
 
-                    cueText = cueText.replace(/<[^>]*>/g, '').trim();
+                    let fullText = textLines.join(' ').replace(/<[^>]*>/g, '');
+                    let speaker = 'Speaker';
 
-                    let speaker = 'Narrator';
-                    let text = cueText;
-
-                    const speakerMatch = cueText.match(/^([A-Za-z0-9_\s-]+):\s*(.*)/);
-                    if (speakerMatch) {
-                        speaker = speakerMatch[1].trim();
-                        text = speakerMatch[2].trim();
-                    } else if (cueText.length > 0) {
-                        speaker = 'Speaker';
+                    if (fullText.includes(':')) {
+                        const parts = fullText.split(':');
+                        speaker = parts[0].trim();
+                        fullText = parts.slice(1).join(':').trim();
                     }
 
-                    if (cueText.length > 0) {
-                        cues.push({ start, end, speaker, text });
-                    }
+                    cues.push({ start, end, speaker, text: fullText });
                 } else {
                     i++;
                 }
             }
+
             return cues;
+        }
+
+        function toggleEditMode() {
+            isEditMode = !isEditMode;
+            const btn = document.getElementById('toggle-edit-mode-btn');
+            const icon = document.getElementById('edit-mode-icon');
+            const text = document.getElementById('edit-mode-text');
+            const sortBtn = document.getElementById('sort-cues-btn');
+
+            if (isEditMode) {
+                if (btn) btn.className = "px-2.5 py-1 text-xs rounded-lg bg-amber-500 text-slate-950 font-bold transition flex items-center gap-1.5 shadow-lg shadow-amber-500/20";
+                if (icon) icon.className = "fa-solid fa-check";
+                if (text) text.innerText = "Xong Edit";
+                if (sortBtn) sortBtn.classList.remove('hidden');
+            } else {
+                if (btn) btn.className = "px-2.5 py-1 text-xs rounded-lg bg-amber-600/20 hover:bg-amber-600/30 border border-amber-500/40 text-amber-300 font-medium transition flex items-center gap-1.5 shadow";
+                if (icon) icon.className = "fa-solid fa-pen-to-square";
+                if (text) text.innerText = "Sửa Phụ Đề";
+                if (sortBtn) sortBtn.classList.add('hidden');
+            }
+
+            renderSubtitles();
+            updateSentenceHighlight();
+        }
+
+        // Quản lý Lịch sử (Undo)
+        function saveStateToHistory() {
+            if (subtitleCues.length === 0 && historyStack.length === 0) return;
+            const snapshot = JSON.parse(JSON.stringify(subtitleCues));
+            historyStack.push(snapshot);
+            if (historyStack.length > MAX_HISTORY) {
+                historyStack.shift();
+            }
+            updateUndoButtonState();
+        }
+
+        function undoLastAction() {
+            if (historyStack.length === 0) return;
+            const previousState = historyStack.pop();
+            subtitleCues = previousState;
+            renderSubtitles();
+            updateSentenceHighlight();
+            updateUndoButtonState();
+        }
+
+        function updateUndoButtonState() {
+            const undoBtn = document.getElementById('undo-btn');
+            if (!undoBtn) return;
+            if (historyStack.length > 0) {
+                undoBtn.removeAttribute('disabled');
+                undoBtn.className = "px-2.5 py-1 text-xs rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-600 font-medium transition flex items-center gap-1.5 shadow active:scale-95";
+            } else {
+                undoBtn.setAttribute('disabled', 'true');
+                undoBtn.className = "px-2.5 py-1 text-xs rounded-lg bg-slate-800 text-slate-500 border border-slate-700/60 font-medium transition flex items-center gap-1.5 shadow disabled:opacity-40 disabled:cursor-not-allowed";
+            }
+        }
+
+        function restoreCueToOriginal(index) {
+            if (!originalCuesSnapshot[index]) return;
+            saveStateToHistory();
+            subtitleCues[index] = JSON.parse(JSON.stringify(originalCuesSnapshot[index]));
+            renderSubtitles();
+            updateSentenceHighlight();
+        }
+
+        function addNewCue(afterIndex = -1) {
+            saveStateToHistory();
+            const currentAudioTime = audioElement.currentTime || 0;
+            const newCue = {
+                start: currentAudioTime,
+                end: currentAudioTime + 3.0,
+                speaker: 'Speaker',
+                text: 'Nhập nội dung phụ đề mới...'
+            };
+
+            if (afterIndex >= 0 && afterIndex < subtitleCues.length) {
+                subtitleCues.splice(afterIndex + 1, 0, newCue);
+                currentSentenceIndex = afterIndex + 1;
+            } else {
+                subtitleCues.push(newCue);
+                currentSentenceIndex = subtitleCues.length - 1;
+            }
+
+            if (!isEditMode) {
+                isEditMode = true;
+                const btn = document.getElementById('toggle-edit-mode-btn');
+                if (btn) {
+                    btn.className = "px-2.5 py-1 text-xs rounded-lg bg-amber-500 text-slate-950 font-bold transition flex items-center gap-1.5 shadow-lg shadow-amber-500/20";
+                    document.getElementById('edit-mode-icon').className = "fa-solid fa-check";
+                    document.getElementById('edit-mode-text').innerText = "Xong Edit";
+                }
+            }
+
+            document.getElementById('download-vtt-btn').classList.remove('hidden');
+            renderSubtitles();
+            updateSentenceHighlight();
+        }
+
+        function deleteCue(index) {
+            if (index >= 0 && index < subtitleCues.length) {
+                saveStateToHistory();
+                subtitleCues.splice(index, 1);
+                if (currentSentenceIndex >= subtitleCues.length) {
+                    currentSentenceIndex = Math.max(0, subtitleCues.length - 1);
+                }
+                renderSubtitles();
+                updateSentenceHighlight();
+            }
+        }
+
+        function updateCue(index, field, value) {
+            if (!subtitleCues[index]) return;
+
+            // Lưu trạng thái trước khi thay đổi giá trị
+            saveStateToHistory();
+
+            if (field === 'start' || field === 'end') {
+                subtitleCues[index][field] = parseInputTimestamp(value);
+            } else {
+                subtitleCues[index][field] = value;
+            }
+
+            document.getElementById('download-vtt-btn').classList.remove('hidden');
+            const previewText = document.getElementById('current-subtitle-preview');
+            const activeCue = subtitleCues[currentSentenceIndex];
+            if (activeCue && previewText) {
+                previewText.innerText = `"${activeCue.text}"`;
+            }
+        }
+
+        function setCueStartToCurrent(index) {
+            if (!subtitleCues[index]) return;
+            saveStateToHistory();
+            subtitleCues[index].start = audioElement.currentTime || 0;
+            renderSubtitles();
+        }
+
+        function setCueEndToCurrent(index) {
+            if (!subtitleCues[index]) return;
+            saveStateToHistory();
+            subtitleCues[index].end = audioElement.currentTime || 0;
+            renderSubtitles();
+        }
+
+        function sortCuesByTime() {
+            saveStateToHistory();
+            subtitleCues.sort((a, b) => a.start - b.start);
+            renderSubtitles();
+            updateSentenceHighlight();
         }
 
         function renderSubtitles() {
@@ -459,7 +658,10 @@
                         </div>
                         <div>
                             <p class="text-sm font-semibold text-slate-300">Chưa có phụ đề</p>
-                            <p class="text-xs text-slate-500 mt-1 max-w-xs">Bạn có thể chọn file phụ đề sẵn có (.vtt/.srt) hoặc nhấn nút <b>"Tạo VTT Bằng AI"</b> để tạo tự động.</p>
+                            <p class="text-xs text-slate-500 mt-1 max-w-xs mb-3">Bạn có thể nạp file .vtt/.srt, dùng AI tạo tự động hoặc tự gõ câu mới.</p>
+                            <button onclick="addNewCue()" class="px-3 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold shadow transition inline-flex items-center gap-1.5">
+                                <i class="fa-solid fa-plus"></i> Tạo câu phụ đề đầu tiên
+                            </button>
                         </div>
                     </div>
                 `;
@@ -469,31 +671,96 @@
 
             const speakersFound = new Set();
 
-            subtitleCues.forEach((cue, index) => {
-                speakersFound.add(cue.speaker);
-                const colorConfig = getSpeakerColor(cue.speaker);
-                const blurStyle = isSubtitlesVisible ? '' : 'blur-md select-none group-hover:blur-none transition-all duration-300';
+            if (isEditMode) {
+                // EDIT MODE UI
+                subtitleCues.forEach((cue, index) => {
+                    speakersFound.add(cue.speaker);
 
-                const item = document.createElement('div');
-                item.id = `sentence-${index}`;
-                item.onclick = () => jumpToSentence(index);
-                item.className = `p-3 sm:p-3.5 rounded-xl border ${colorConfig.border} ${colorConfig.bg} hover:border-brand-500/50 cursor-pointer transition-all duration-200 group flex items-start gap-3`;
+                    // Kiểm tra xem câu này có nút phục hồi gốc hay không
+                    const origCue = originalCuesSnapshot[index];
+                    const canRestore = origCue && (origCue.text !== cue.text || origCue.start !== cue.start || origCue.end !== cue.end || origCue.speaker !== cue.speaker);
 
-                item.innerHTML = `
-                    <span class="text-[10px] font-mono text-slate-400 mt-0.5 px-1.5 py-0.5 rounded bg-slate-900 border border-slate-800 shrink-0">
-                        ${formatTime(cue.start)}
-                    </span>
-                    <div class="flex-1 overflow-hidden">
-                        <div class="flex items-center justify-between mb-1">
-                            <span class="text-[11px] font-bold ${colorConfig.text}">${cue.speaker}</span>
-                            <i class="fa-solid fa-play text-[10px] text-brand-400 opacity-0 group-hover:opacity-100 transition"></i>
+                    const item = document.createElement('div');
+                    item.id = `sentence-${index}`;
+                    item.className = `p-3 bg-slate-900/90 border border-slate-800 rounded-xl space-y-2.5 shadow-md transition hover:border-slate-700`;
+
+                    item.innerHTML = `
+                        <div class="flex items-center justify-between gap-2 border-b border-slate-800/80 pb-2">
+                            <div class="flex items-center gap-2 flex-1">
+                                <span class="text-xs font-mono text-slate-400 font-bold w-6">#${index + 1}</span>
+                                <i class="fa-solid fa-user text-slate-500 text-xs"></i>
+                                <input type="text" value="${cue.speaker || ''}" onchange="updateCue(${index}, 'speaker', this.value)" placeholder="Người nói..." class="bg-slate-950 border border-slate-700/80 rounded px-2 py-1 text-xs text-brand-400 font-bold w-32 focus:outline-none focus:border-brand-500 transition">
+                            </div>
+                            <div class="flex items-center gap-1">
+                                ${canRestore ? `<button onclick="restoreCueToOriginal(${index})" class="px-2 py-1 rounded bg-amber-500/20 hover:bg-amber-500/30 border border-amber-500/40 text-amber-300 text-[10px] font-semibold transition flex items-center gap-1" title="Phục hồi lại câu này về ban đầu"><i class="fa-solid fa-rotate-left"></i> Phục hồi</button>` : ''}
+                                <button onclick="jumpToSentence(${index})" class="p-1.5 rounded bg-slate-800 hover:bg-slate-700 text-brand-400 hover:text-white text-xs transition" title="Phát audio từ mốc này"><i class="fa-solid fa-play"></i></button>
+                                <button onclick="addNewCue(${index})" class="p-1.5 rounded bg-slate-800 hover:bg-slate-700 text-emerald-400 hover:text-white text-xs transition" title="Thêm câu mới ngay phía sau"><i class="fa-solid fa-plus"></i></button>
+                                <button onclick="deleteCue(${index})" class="p-1.5 rounded bg-slate-800 hover:bg-slate-700 text-rose-400 hover:text-white text-xs transition" title="Xóa câu này"><i class="fa-solid fa-trash"></i></button>
+                            </div>
                         </div>
-                        <p class="text-xs sm:text-sm text-slate-200 leading-relaxed font-medium ${blurStyle}">${cue.text}</p>
-                    </div>
-                `;
 
-                container.appendChild(item);
-            });
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
+                            <div class="flex items-center gap-1.5">
+                                <span class="text-slate-400 text-[10px] w-12 shrink-0 font-medium">Bắt đầu:</span>
+                                <input type="text" value="${formatTimestampForInput(cue.start)}" onchange="updateCue(${index}, 'start', this.value)" class="bg-slate-950 border border-slate-700/80 rounded px-2 py-1 text-xs font-mono text-slate-200 w-full focus:outline-none focus:border-brand-500 transition">
+                                <button onclick="setCueStartToCurrent(${index})" class="px-2 py-1 text-[10px] font-semibold rounded bg-brand-600/20 hover:bg-brand-600/40 text-brand-400 border border-brand-500/30 whitespace-nowrap transition flex items-center gap-1" title="Đặt mốc Bắt Đầu = Thời gian audio hiện tại">
+                                    <i class="fa-solid fa-stopwatch"></i> Sync
+                                </button>
+                            </div>
+                            <div class="flex items-center gap-1.5">
+                                <span class="text-slate-400 text-[10px] w-12 shrink-0 font-medium">Kết thúc:</span>
+                                <input type="text" value="${formatTimestampForInput(cue.end)}" onchange="updateCue(${index}, 'end', this.value)" class="bg-slate-950 border border-slate-700/80 rounded px-2 py-1 text-xs font-mono text-slate-200 w-full focus:outline-none focus:border-brand-500 transition">
+                                <button onclick="setCueEndToCurrent(${index})" class="px-2 py-1 text-[10px] font-semibold rounded bg-brand-600/20 hover:bg-brand-600/40 text-brand-400 border border-brand-500/30 whitespace-nowrap transition flex items-center gap-1" title="Đặt mốc Kết Thúc = Thời gian audio hiện tại">
+                                    <i class="fa-solid fa-stopwatch"></i> Sync
+                                </button>
+                            </div>
+                        </div>
+
+                        <div>
+                            <textarea onchange="updateCue(${index}, 'text', this.value)" rows="2" placeholder="Nhập văn bản phụ đề..." class="w-full bg-slate-950 border border-slate-700/80 rounded p-2 text-xs text-slate-100 focus:outline-none focus:border-brand-500 leading-relaxed custom-scrollbar transition">${cue.text || ''}</textarea>
+                        </div>
+                    `;
+
+                    container.appendChild(item);
+                });
+
+                // Add button at bottom in edit mode
+                const addBottomBtn = document.createElement('button');
+                addBottomBtn.onclick = () => addNewCue();
+                addBottomBtn.className = "w-full py-2.5 rounded-xl border border-dashed border-slate-800 hover:border-indigo-500/50 bg-slate-900/40 hover:bg-slate-900 text-indigo-400 font-semibold text-xs transition flex items-center justify-center gap-2";
+                addBottomBtn.innerHTML = `<i class="fa-solid fa-plus"></i> Thêm câu mới ở cuối danh sách`;
+                container.appendChild(addBottomBtn);
+
+            } else {
+                // LISTENING MODE UI
+                subtitleCues.forEach((cue, index) => {
+                    speakersFound.add(cue.speaker);
+                    const colorConfig = getSpeakerColor(cue.speaker);
+                    const blurStyle = isSubtitlesVisible ? '' : 'blur-md select-none group-hover:blur-none transition-all duration-300';
+
+                    const item = document.createElement('div');
+                    item.id = `sentence-${index}`;
+                    item.onclick = () => jumpToSentence(index);
+                    item.className = `p-3 sm:p-3.5 rounded-xl border ${colorConfig.border} ${colorConfig.bg} hover:border-brand-500/50 cursor-pointer transition-all duration-200 group flex items-start gap-3`;
+
+                    item.innerHTML = `
+                        <span class="text-[10px] font-mono text-slate-400 mt-0.5 px-1.5 py-0.5 rounded bg-slate-900 border border-slate-800 shrink-0">
+                            ${formatTime(cue.start)}
+                        </span>
+                        <div class="flex-1 overflow-hidden">
+                            <div class="flex items-center justify-between mb-1">
+                                <span class="text-[11px] font-bold ${colorConfig.text}">${cue.speaker}</span>
+                                <div class="flex items-center gap-1.5 opacity-0 group-hover:opacity-100 transition">
+                                    <button onclick="event.stopPropagation(); jumpToSentence(${index});" class="text-brand-400 hover:text-white text-[10px]" title="Phát câu này"><i class="fa-solid fa-play"></i></button>
+                                </div>
+                            </div>
+                            <p class="text-xs sm:text-sm text-slate-200 leading-relaxed font-medium ${blurStyle}">${cue.text}</p>
+                        </div>
+                    `;
+
+                    container.appendChild(item);
+                });
+            }
 
             speakersFound.forEach(speaker => {
                 const colorConfig = getSpeakerColor(speaker);
@@ -503,7 +770,7 @@
                 legendContainer.appendChild(badge);
             });
 
-            document.getElementById('total-cues-text').innerText = `Tổng số ${subtitleCues.length} câu thoại`;
+            document.getElementById('total-cues-text').innerText = `Tổng số ${subtitleCues.length} câu thoại ${isEditMode ? '(Đang chỉnh sửa)' : ''}`;
         }
 
         function handleAudioSelect(e) {
@@ -531,6 +798,10 @@
                 reader.onload = function(evt) {
                     const text = evt.target.result;
                     subtitleCues = parseVTT(text);
+                    originalCuesSnapshot = JSON.parse(JSON.stringify(subtitleCues));
+                    historyStack = [];
+                    updateUndoButtonState();
+
                     renderSubtitles();
                     currentSentenceIndex = 0;
                     updateSentenceHighlight();
@@ -644,8 +915,8 @@ Quy tắc bắt buộc:
                     }
                 };
 
-                const ak = atob("QVEuQWI4Uk42SlRVRmp4Y1N5VjZ2dzU4T0w4T0JqNldZako1VmxLdUtvRXJLM1dyY3J2RFE="); // Runtime auto-injected
-                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent?key=${ak}`;
+                const apiKey = ""; // Runtime auto-injected
+                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${apiKey}`;
 
                 let response = null;
                 let retries = 0;
@@ -684,6 +955,9 @@ Quy tắc bắt buộc:
                 }
 
                 subtitleCues = parseVTT(generatedText);
+                originalCuesSnapshot = JSON.parse(JSON.stringify(subtitleCues));
+                historyStack = [];
+                updateUndoButtonState();
 
                 if (subtitleCues.length === 0) {
                     throw new Error("Không thể trích xuất được mốc thời gian từ phản hồi AI.");
@@ -903,13 +1177,53 @@ Quy tắc bắt buộc:
             }
         });
 
+        // Phát lại câu phụ đề vừa nghe (1 lần duy nhất)
+        function replayCurrentSentence() {
+            if (!audioLoaded) return;
+            if (subtitleCues.length > 0 && subtitleCues[currentSentenceIndex]) {
+                const cue = subtitleCues[currentSentenceIndex];
+                audioElement.currentTime = cue.start;
+            } else {
+                audioElement.currentTime = 0;
+            }
+
+            if (!isPlaying) {
+                audioElement.play().then(() => {
+                    if (audioCtx && audioCtx.state === 'suspended') {
+                        audioCtx.resume();
+                    }
+                }).catch(err => console.error(err));
+            }
+
+            updateSentenceHighlight();
+
+            // Hiệu ứng phản hồi trên nút
+            const btn = document.getElementById('replay-sentence-btn');
+            if (btn) {
+                btn.classList.add('text-amber-400');
+                setTimeout(() => btn.classList.remove('text-amber-400'), 250);
+            }
+        }
+
+        // Bật / Tắt Lặp đi lặp lại liên tục câu hiện tại (Auto Continuous Loop)
         function toggleSentenceLoop() {
             isSentenceLoop = !isSentenceLoop;
             const btn = document.getElementById('loop-sentence-btn');
             if (isSentenceLoop) {
-                btn.className = "w-9 h-9 sm:w-10 sm:h-10 rounded-lg bg-brand-500 text-white border border-brand-400 flex items-center justify-center transition shadow-md shadow-brand-500/20";
+                btn.className = "w-8 h-8 sm:w-9 sm:h-9 rounded-lg bg-brand-500 text-white border border-brand-400 flex items-center justify-center transition shadow-md shadow-brand-500/20 relative";
             } else {
-                btn.className = "w-9 h-9 sm:w-10 sm:h-10 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 flex items-center justify-center hover:text-white transition";
+                btn.className = "w-8 h-8 sm:w-9 sm:h-9 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 flex items-center justify-center hover:text-brand-400 transition relative";
+            }
+        }
+
+        // Bật / Tắt Lặp toàn bộ Audio bài phát
+        function toggleTrackLoop() {
+            isTrackLoop = !isTrackLoop;
+            const btn = document.getElementById('loop-track-btn');
+            if (isTrackLoop) {
+                btn.className = "w-8 h-8 sm:w-9 sm:h-9 rounded-lg bg-indigo-600 text-white border border-indigo-500 flex items-center justify-center transition shadow-md shadow-indigo-500/20";
+            } else {
+                btn.className = "w-8 h-8 sm:w-9 sm:h-9 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 flex items-center justify-center hover:text-indigo-400 transition";
             }
         }
 
@@ -919,13 +1233,17 @@ Quy tắc bắt buộc:
             const badge = document.getElementById('mode-badge-text');
 
             if (isShadowingMode) {
-                btn.className = "px-2.5 py-1.5 text-xs font-medium rounded-lg bg-rose-600 text-white border border-rose-500 shadow-md flex items-center gap-1.5 transition";
-                document.getElementById('shadowing-btn-text').innerText = "Shadowing On";
+                if (btn) {
+                    btn.className = "px-2.5 py-1.5 text-xs font-medium rounded-lg bg-rose-600 text-white border border-rose-500 shadow-md flex items-center gap-1.5 transition";
+                    document.getElementById('shadowing-btn-text').innerText = "Shadowing On";
+                }
                 badge.innerText = "Chế độ Shadowing (Tự dừng ở cuối câu)";
                 badge.className = "px-2 py-0.5 rounded bg-rose-500/20 text-rose-300 border border-rose-500/30 font-medium text-[10px] shrink-0";
             } else {
-                btn.className = "px-2.5 py-1.5 text-xs font-medium rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 flex items-center gap-1.5 transition";
-                document.getElementById('shadowing-btn-text').innerText = "Shadowing Off";
+                if (btn) {
+                    btn.className = "px-2.5 py-1.5 text-xs font-medium rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 flex items-center gap-1.5 transition";
+                    document.getElementById('shadowing-btn-text').innerText = "Shadowing Off";
+                }
                 badge.innerText = "Nghe Liên Tục";
                 badge.className = "px-2 py-0.5 rounded bg-brand-500/10 text-brand-400 border border-brand-500/20 font-medium text-[10px] shrink-0";
             }
@@ -959,35 +1277,8 @@ Quy tắc bắt buộc:
             }
         }
 
-        audioElement.onloadedmetadata = () => {
-            timeDisplay.innerText = `00:00 / ${formatTime(audioElement.duration)}`;
-            updateAudioProgressAndCue(0);
-        };
-
-        audioElement.ontimeupdate = () => {
-            if (!audioElement.duration) return;
-            const currTime = audioElement.currentTime;
-            updateAudioProgressAndCue(currTime);
-        };
-
-        audioElement.onplay = () => {
-            isPlaying = true;
-            playIcon.className = "fa-solid fa-pause";
-            drawVisualizer();
-        };
-
-        audioElement.onpause = () => {
-            isPlaying = false;
-            playIcon.className = "fa-solid fa-play ml-0.5";
-        };
-
-        audioElement.onended = () => {
-            isPlaying = false;
-            playIcon.className = "fa-solid fa-play ml-0.5";
-        };
-
         function initAudioContext() {
-            if (!audioCtx) {
+            if (!audioCtx && audioElement) {
                 const AudioContext = window.AudioContext || window.webkitAudioContext;
                 audioCtx = new AudioContext();
                 analyser = audioCtx.createAnalyser();
@@ -1000,7 +1291,7 @@ Quy tắc bắt buộc:
         }
 
         function resizeCanvas() {
-            if (canvas.parentElement) {
+            if (canvas && canvas.parentElement) {
                 canvas.width = canvas.parentElement.clientWidth;
                 canvas.height = canvas.parentElement.clientHeight;
             }
@@ -1008,7 +1299,7 @@ Quy tắc bắt buộc:
         window.addEventListener('resize', resizeCanvas);
 
         function checkHighPrecisionTime() {
-            if (!isPlaying || subtitleCues.length === 0) return;
+            if (!isPlaying || subtitleCues.length === 0 || !audioElement) return;
 
             const currTime = audioElement.currentTime;
             const activeCue = subtitleCues[currentSentenceIndex];
@@ -1029,6 +1320,7 @@ Quy tắc bắt buộc:
         }
 
         function drawVisualizer() {
+            if (!canvas || !ctx) return;
             if (!isPlaying) {
                 ctx.clearRect(0, 0, canvas.width, canvas.height);
                 ctx.beginPath();
@@ -1072,7 +1364,7 @@ Quy tắc bắt buộc:
             if (!container) return;
 
             function seek(e) {
-                if (!audioElement.duration) return;
+                if (!audioElement || !audioElement.duration) return;
                 const rect = container.getBoundingClientRect();
                 const pos = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
                 audioElement.currentTime = pos * audioElement.duration;
@@ -1098,12 +1390,35 @@ Quy tắc bắt buộc:
         }
 
         document.addEventListener('keydown', (e) => {
+            // Phím tắt Ctrl + Z / Cmd + Z để Hoàn tác
+            if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z') {
+                e.preventDefault();
+                undoLastAction();
+                return;
+            }
+
             if (['INPUT', 'TEXTAREA'].includes(document.activeElement.tagName)) return;
 
             switch (e.code) {
                 case 'Space':
                     e.preventDefault();
                     togglePlayPause();
+                    break;
+                case 'KeyE':
+                    e.preventDefault();
+                    toggleEditMode();
+                    break;
+                case 'KeyR':
+                    e.preventDefault();
+                    replayCurrentSentence();
+                    break;
+                case 'KeyL':
+                    e.preventDefault();
+                    if (e.shiftKey) {
+                        toggleTrackLoop();
+                    } else {
+                        toggleSentenceLoop();
+                    }
                     break;
                 case 'ArrowLeft':
                 case 'KeyA':
@@ -1115,11 +1430,6 @@ Quy tắc bắt buộc:
                     e.preventDefault();
                     nextSentence();
                     break;
-                case 'KeyL':
-                case 'KeyR':
-                    e.preventDefault();
-                    toggleSentenceLoop();
-                    break;
                 case 'KeyS':
                     e.preventDefault();
                     toggleShadowingMode();
@@ -1130,17 +1440,17 @@ Quy tắc bắt buộc:
                     break;
                 case 'KeyM':
                     e.preventDefault();
-                    audioElement.muted = !audioElement.muted;
+                    if (audioElement) audioElement.muted = !audioElement.muted;
                     break;
                 case 'ArrowUp':
                     e.preventDefault();
-                    if (audioElement.volume < 1) {
+                    if (audioElement && audioElement.volume < 1) {
                         audioElement.volume = Math.min(1, audioElement.volume + 0.1);
                     }
                     break;
                 case 'ArrowDown':
                     e.preventDefault();
-                    if (audioElement.volume > 0) {
+                    if (audioElement && audioElement.volume > 0) {
                         audioElement.volume = Math.max(0, audioElement.volume - 0.1);
                     }
                     break;
@@ -1148,6 +1458,46 @@ Quy tắc bắt buộc:
         });
 
         window.onload = function() {
+            audioElement = document.getElementById('main-audio');
+            canvas = document.getElementById('visualizer');
+            if (canvas) ctx = canvas.getContext('2d');
+            progressBar = document.getElementById('progress-bar');
+            timeDisplay = document.getElementById('time-display');
+            playIcon = document.getElementById('play-icon');
+
+            if (audioElement) {
+                audioElement.onloadedmetadata = () => {
+                    if (timeDisplay) timeDisplay.innerText = `00:00 / ${formatTime(audioElement.duration)}`;
+                    updateAudioProgressAndCue(0);
+                };
+
+                audioElement.ontimeupdate = () => {
+                    if (!audioElement.duration) return;
+                    const currTime = audioElement.currentTime;
+                    updateAudioProgressAndCue(currTime);
+                };
+
+                audioElement.onplay = () => {
+                    isPlaying = true;
+                    if (playIcon) playIcon.className = "fa-solid fa-pause";
+                    drawVisualizer();
+                };
+
+                audioElement.onpause = () => {
+                    isPlaying = false;
+                    if (playIcon) playIcon.className = "fa-solid fa-play ml-0.5";
+                };
+
+                audioElement.onended = () => {
+                    if (isTrackLoop) {
+                        jumpToSentence(0);
+                    } else {
+                        isPlaying = false;
+                        if (playIcon) playIcon.className = "fa-solid fa-play ml-0.5";
+                    }
+                };
+            }
+
             resizeCanvas();
             renderSubtitles();
             updateSentenceHighlight();
