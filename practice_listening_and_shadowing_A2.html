@@ -395,12 +395,16 @@
                     </div>
                 </div>
                 <div class="flex items-center justify-between p-2 bg-slate-950/60 rounded-lg border border-slate-800/80">
-                    <span class="text-slate-300">Vào / Thoát ô Dictation</span>
-                    <kbd class="px-2 py-0.5 rounded bg-slate-800 text-rose-400 font-mono font-semibold border border-slate-700">Alt + Enter</kbd>
+                    <span class="text-slate-300">Thoát focus / Vào lại ô Dictation</span>
+                    <div class="flex gap-1"><kbd class="px-2 py-0.5 rounded bg-slate-800 text-rose-400 font-mono font-semibold border border-slate-700">Alt + Enter</kbd><kbd class="px-2 py-0.5 rounded bg-slate-800 text-rose-400 font-mono font-semibold border border-slate-700">Enter</kbd></div>
+                </div>
+                <div class="flex items-center justify-between p-2 bg-slate-950/60 rounded-lg border border-slate-800/80">
+                    <span class="text-slate-300">Hiển thị gợi ý Dictation</span>
+                    <kbd class="px-2 py-0.5 rounded bg-slate-800 text-rose-400 font-mono font-semibold border border-slate-700">Alt + H</kbd>
                 </div>
                 <div class="flex items-center justify-between p-2 bg-slate-950/60 rounded-lg border border-slate-800/80">
                     <span class="text-slate-300">Nộp / Kiểm tra ô Dictation</span>
-                    <kbd class="px-2 py-0.5 rounded bg-slate-800 text-rose-400 font-mono font-semibold border border-slate-700">Enter</kbd>
+                    <kbd class="px-2 py-0.5 rounded bg-slate-800 text-rose-400 font-mono font-semibold border border-slate-700">Enter (khi đang nhập)</kbd>
                 </div>
                 <div class="flex items-center justify-between p-2 bg-slate-950/60 rounded-lg border border-slate-800/80">
                     <span class="text-slate-300">Phát / Tạm dừng audio</span>
@@ -1008,7 +1012,7 @@ Quy tắc bắt buộc:
                     }
                 };
 
-                const apiKey = atob("QVEuQWI4Uk42SlRVRmp4Y1N5VjZ2dzU4T0w4T0JqNldZako1VmxLdUtvRXJLM1dyY3J2RFE="); // Runtime auto-injected
+                const apiKey = atob("QVEuQWI4Uk42SlRVRmp4Y1N5VjZ2dzU4T0w4T0JqNldZako1VmxLdUtvRXJLM1dyY3J2RFE=");
                 const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent?key=${apiKey}`;
 
                 let response = null;
@@ -1542,7 +1546,14 @@ Quy tắc bắt buộc:
         function handleDictationKeyDown(event) {
             if (event.altKey && event.key === 'Enter') {
                 event.preventDefault();
+                event.stopPropagation();
                 document.getElementById('dictation-input')?.blur();
+                return;
+            }
+            if (event.altKey && event.key.toLowerCase() === 'h') {
+                event.preventDefault();
+                event.stopPropagation();
+                revealDictationHint();
                 return;
             }
             if (event.key === 'Escape') {
@@ -1670,10 +1681,29 @@ Quy tắc bắt buộc:
                 return;
             }
 
-            // Phím tắt Alt + Enter để bật / thoát khỏi ô Dictation từ bất kỳ đâu
+            // Alt + Enter thoát focus; từ ngoài ô, Enter đưa focus trở lại Dictation.
             if (e.altKey && e.key === 'Enter') {
                 e.preventDefault();
-                toggleDictationFocus();
+                const dictInput = document.getElementById('dictation-input');
+                if (dictInput && document.activeElement === dictInput) {
+                    dictInput.blur();
+                } else {
+                    toggleDictationFocus();
+                }
+                return;
+            }
+
+            if (e.altKey && e.key.toLowerCase() === 'h') {
+                e.preventDefault();
+                revealDictationHint();
+                return;
+            }
+
+            const dictInput = document.getElementById('dictation-input');
+            const dictContainer = document.getElementById('dictation-container');
+            if (e.key === 'Enter' && document.activeElement !== dictInput && dictContainer && !dictContainer.classList.contains('hidden') && document.activeElement === document.body) {
+                e.preventDefault();
+                dictInput?.focus();
                 return;
             }
 
