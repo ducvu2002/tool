@@ -175,7 +175,7 @@
                         </button>
                     </div>
                     <div id="dictation-feedback" class="text-[11px] text-slate-400 flex items-center justify-between font-mono pt-0.5">
-                        <span id="dictation-msg" class="truncate pr-2">Bấm Enter để nộp. Nút Play vẫn cho phép chuyển câu bình thường.</span>
+                        <span id="dictation-msg" class="truncate pr-2">Bấm Enter để nhập và kiểm tra.</span>
                         <button onclick="revealDictationHint()" class="text-rose-400 hover:text-rose-300 underline text-[10px] shrink-0 font-sans ml-2">Xem Gợi ý</button>
                     </div>
                 </div>
@@ -207,7 +207,7 @@
                     </div>
 
                     <div class="flex items-center gap-1 sm:gap-1.5">
-                        <button id="replay-sentence-btn" onclick="replayCurrentSentence()" class="w-8 h-8 sm:w-9 sm:h-9 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 flex items-center justify-center hover:text-amber-400 active:scale-90 transition" title="Phát lại ngay câu hiện tại 1 lần (Phím R)">
+                        <button id="replay-sentence-btn" onclick="replayCurrentSentence()" class="w-8 h-8 sm:w-9 sm:h-9 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 flex items-center justify-center hover:text-amber-400 active:scale-90 transition" title="Phát lại ngay câu hiện tại 1 lần (Phím R / Alt + R)">
                             <i class="fa-solid fa-arrow-rotate-left text-xs"></i>
                         </button>
 
@@ -369,7 +369,7 @@
             <div class="flex-1 overflow-y-auto custom-scrollbar my-3 pr-1 space-y-2 text-xs">
                 <div class="flex items-center justify-between p-2 bg-slate-950/60 rounded-lg border border-slate-800/80">
                     <span class="text-slate-300">Phát lại câu hiện tại (1 lần)</span>
-                    <kbd class="px-2 py-0.5 rounded bg-slate-800 text-amber-400 font-mono font-semibold border border-slate-700">R</kbd>
+                    <div class="flex gap-1"><kbd class="px-2 py-0.5 rounded bg-slate-800 text-amber-400 font-mono font-semibold border border-slate-700">R</kbd><kbd class="px-2 py-0.5 rounded bg-slate-800 text-amber-400 font-mono font-semibold border border-slate-700">Alt + R</kbd></div>
                 </div>
                 <div class="flex items-center justify-between p-2 bg-slate-950/60 rounded-lg border border-slate-800/80">
                     <span class="text-slate-300">Bật / Tắt Lặp liên tục câu hiện tại</span>
@@ -1203,7 +1203,7 @@ Quy tắc bắt buộc:
                 dictBadge.className = "text-[10px] font-medium px-2 py-0.5 rounded bg-slate-800 text-slate-400 border border-slate-700";
             }
             if (dictMsg) {
-                dictMsg.innerText = "Bấm Enter để nộp. Nút Play vẫn cho phép chuyển câu bình thường.";
+                dictMsg.innerText = "Bấm Enter để nhập và kiểm tra.";
                 dictMsg.className = "text-slate-400 truncate pr-2";
             }
 
@@ -1502,7 +1502,7 @@ Quy tắc bắt buộc:
             const cleanedTarget = cleanTextForCompare(targetText);
             const cleanedInput = cleanTextForCompare(inputEl.value);
 
-            if (cleanedInput.length > 0 && cleanedInput === cleanedTarget) {
+            if (isSubmit && cleanedInput.length > 0 && cleanedInput === cleanedTarget) {
                 if (badgeEl) {
                     badgeEl.innerText = "Chính xác! 🎉";
                     badgeEl.className = "text-[10px] font-bold px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 animate-pulse";
@@ -1521,7 +1521,7 @@ Quy tắc bắt buộc:
                         badgeEl.className = "text-[10px] font-medium px-2 py-0.5 rounded bg-slate-800 text-slate-400 border border-slate-700";
                     }
                     if (msgEl) {
-                        msgEl.innerText = "Bấm Enter để nộp. Nút Play vẫn cho phép chuyển câu bình thường.";
+                        msgEl.innerText = "Bấm Enter để nhập và kiểm tra.";
                         msgEl.className = "text-slate-400 truncate pr-2";
                     }
                     if (currentSentenceIndex + 1 < subtitleCues.length) {
@@ -1595,10 +1595,6 @@ Quy tắc bắt buộc:
                     audioElement.pause();
                     audioElement.currentTime = activeCue.end;
                     updateSentenceHighlight();
-                    if (!isSubtitlesVisible) {
-                        const dictInput = document.getElementById('dictation-input');
-                        if (dictInput) dictInput.focus();
-                    }
                     return;
                 }
             }
@@ -1696,6 +1692,13 @@ Quy tắc bắt buộc:
             if (e.altKey && e.key.toLowerCase() === 'h') {
                 e.preventDefault();
                 revealDictationHint();
+                return;
+            }
+
+            if (e.altKey && e.key.toLowerCase() === 'r') {
+                e.preventDefault();
+                e.stopPropagation();
+                replayCurrentSentence();
                 return;
             }
 
