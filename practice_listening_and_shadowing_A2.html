@@ -74,10 +74,10 @@
 
             <!-- Global Header Actions -->
             <div class="flex items-center gap-1.5 sm:gap-2">
-                <button id="ai-gen-header-btn" onclick="generateVTTWithAI()" class="px-2 sm:px-2.5 py-1.5 text-xs font-semibold rounded-lg bg-gradient-to-r from-amber-500 to-brand-500 hover:from-amber-600 hover:to-brand-600 text-white shadow-md flex items-center gap-1.5 transition active:scale-95" title="Tạo phụ đề tự động bằng AI">
-                    <i class="fa-solid fa-wand-magic-sparkles"></i>
-                    <span class="hidden sm:inline">Tạo VTT AI</span>
-                </button>
+                <a id="vtt-creator-header-btn" href="https://share.gemini.google/pTclK06xF1CB" target="_blank" rel="noopener noreferrer" class="px-2 sm:px-2.5 py-1.5 text-xs font-semibold rounded-lg bg-gradient-to-r from-emerald-500 to-brand-500 hover:from-emerald-600 hover:to-brand-600 text-white shadow-md flex items-center gap-1.5 transition active:scale-95" title="Mở trang riêng để tạo file VTT">
+                    <i class="fa-solid fa-file-circle-plus"></i>
+                    <span class="hidden sm:inline">Tạo File VTT</span>
+                </a>
                 <button id="shortcuts-header-btn" onclick="toggleShortcutsModal()" class="px-2 sm:px-2.5 py-1.5 text-xs font-medium rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 flex items-center gap-1.5 transition" title="Xem danh sách phím tắt">
                     <i class="fa-solid fa-keyboard text-brand-400"></i>
                     <span class="hidden sm:inline">Phím Tắt</span>
@@ -121,7 +121,7 @@
                     </div>
                 </div>
 
-                <!-- 2. Subtitle File Input & AI Generator Button -->
+                <!-- 2. Subtitle File Input & VTT Creator Link -->
                 <div>
                     <label class="block text-[11px] font-medium text-slate-300 mb-1 flex items-center justify-between">
                         <span>2. Tệp Phụ Đề (.vtt, .srt) - [Không bắt buộc]</span>
@@ -131,15 +131,14 @@
                         <input type="file" id="vtt-file-input" accept=".vtt,.srt" class="hidden" onchange="handleVttSelect(event)">
                         <i class="fa-solid fa-file-code text-indigo-400 text-lg"></i>
                         <div class="text-left overflow-hidden">
-                            <p class="text-xs font-semibold text-slate-200 truncate" id="vtt-name-display">Chọn file .vtt/.srt (hoặc dùng nút AI bên dưới)</p>
+                            <p class="text-xs font-semibold text-slate-200 truncate" id="vtt-name-display">Chọn file .vtt/.srt (hoặc tạo file VTT ở trang riêng)</p>
                         </div>
                     </div>
 
-                    <!-- AI VTT Generation Action -->
-                    <button id="ai-generate-btn" onclick="generateVTTWithAI()" class="w-full py-2 px-3 rounded-lg bg-gradient-to-r from-amber-500 via-brand-500 to-indigo-600 hover:from-amber-600 hover:via-brand-600 hover:to-indigo-700 text-white font-semibold text-xs shadow-lg shadow-brand-500/20 flex items-center justify-center gap-2 transition active:scale-[0.98]">
-                        <i class="fa-solid fa-wand-magic-sparkles text-amber-200 animate-pulse"></i>
-                        <span>Tạo VTT Tự Động Bằng AI</span>
-                    </button>
+                    <a href="https://share.gemini.google/pTclK06xF1CB" target="_blank" rel="noopener noreferrer" class="w-full py-2 px-3 rounded-lg bg-gradient-to-r from-emerald-500 via-brand-500 to-indigo-600 hover:from-emerald-600 hover:via-brand-600 hover:to-indigo-700 text-white font-semibold text-xs shadow-lg shadow-brand-500/20 flex items-center justify-center gap-2 transition active:scale-[0.98]">
+                        <i class="fa-solid fa-file-circle-plus text-emerald-200"></i>
+                        <span>Tạo File VTT Ở Trang Riêng</span>
+                    </a>
                 </div>
             </div>
 
@@ -327,32 +326,6 @@
         </div>
 
     </main>
-
-    <!-- AI Generation Modal -->
-    <div id="ai-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-[100] hidden flex items-center justify-center p-4">
-        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 max-w-md w-full shadow-2xl space-y-4 text-center relative overflow-hidden">
-            <div class="w-16 h-16 rounded-2xl bg-gradient-to-tr from-amber-500 to-brand-500 flex items-center justify-center text-white text-2xl mx-auto shadow-lg shadow-brand-500/30">
-                <i id="ai-modal-icon" class="fa-solid fa-wand-magic-sparkles animate-spin"></i>
-            </div>
-
-            <div>
-                <h3 id="ai-modal-title" class="text-base font-bold text-white">Đang Phân Tích Audio & Tạo Phụ Đề AI</h3>
-                <p id="ai-modal-desc" class="text-xs text-slate-400 mt-1 leading-relaxed">
-                    Hệ thống AI Gemini đang quét âm thanh và tạo danh sách câu WebVTT chính xác từng mili-giây...
-                </p>
-            </div>
-
-            <div class="w-full bg-slate-950 h-2 rounded-full overflow-hidden border border-slate-800">
-                <div id="ai-modal-progress" class="h-full bg-gradient-to-r from-amber-500 to-brand-500 w-2/3 animate-pulse rounded-full"></div>
-            </div>
-
-            <p id="ai-modal-status" class="text-[11px] font-mono text-amber-400">Đang mã hóa dữ liệu & gửi tới AI...</p>
-
-            <button id="ai-modal-close-btn" onclick="closeAiModal()" class="hidden w-full py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold transition border border-slate-700">
-                Đóng
-            </button>
-        </div>
-    </div>
 
     <!-- Keyboard Shortcuts Help Modal -->
     <div id="shortcuts-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-[100] hidden flex items-center justify-center p-4">
@@ -759,7 +732,7 @@
                         </div>
                         <div>
                             <p class="text-sm font-semibold text-slate-300">Chưa có phụ đề</p>
-                            <p class="text-xs text-slate-500 mt-1 max-w-xs mb-3">Bạn có thể nạp file .vtt/.srt, dùng AI tạo tự động hoặc tự gõ câu mới.</p>
+                            <p class="text-xs text-slate-500 mt-1 max-w-xs mb-3">Bạn có thể nạp file .vtt/.srt hoặc tự gõ câu mới.</p>
                             <button onclick="addNewCue()" class="px-3 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold shadow transition inline-flex items-center gap-1.5">
                                 <i class="fa-solid fa-plus"></i> Tạo câu phụ đề đầu tiên
                             </button>
@@ -882,7 +855,7 @@
                 document.getElementById('audio-file-badge').innerText = 'Audio Sẵn Sàng';
                 document.getElementById('audio-file-badge').className = 'text-[9px] text-emerald-400 bg-emerald-400/10 px-1 py-0.5 rounded border border-emerald-400/20';
 
-                document.getElementById('current-subtitle-preview').innerText = "Nhấn Play để nghe hoặc chọn 'Tạo VTT AI' để có phụ đề đồng bộ.";
+                document.getElementById('current-subtitle-preview').innerText = "Nhấn Play để nghe hoặc chọn 'Tạo File VTT' để mở trang tạo phụ đề.";
 
                 initAudioContext();
             }
@@ -915,176 +888,6 @@
             }
         }
 
-        function showAiModal(title, desc, statusText, isError = false) {
-            const modal = document.getElementById('ai-modal');
-            const icon = document.getElementById('ai-modal-icon');
-            const titleEl = document.getElementById('ai-modal-title');
-            const descEl = document.getElementById('ai-modal-desc');
-            const statusEl = document.getElementById('ai-modal-status');
-            const progress = document.getElementById('ai-modal-progress');
-            const closeBtn = document.getElementById('ai-modal-close-btn');
-
-            modal.classList.remove('hidden');
-            titleEl.innerText = title;
-            descEl.innerText = desc;
-            statusEl.innerText = statusText;
-
-            if (isError) {
-                icon.className = "fa-solid fa-triangle-exclamation text-rose-400";
-                progress.className = "h-full bg-rose-500 w-full";
-                statusEl.className = "text-[11px] font-mono text-rose-400";
-                closeBtn.classList.remove('hidden');
-            } else {
-                icon.className = "fa-solid fa-wand-magic-sparkles animate-spin text-amber-300";
-                progress.className = "h-full bg-gradient-to-r from-amber-500 to-brand-500 w-2/3 animate-pulse rounded-full";
-                statusEl.className = "text-[11px] font-mono text-amber-400";
-                closeBtn.classList.add('hidden');
-            }
-        }
-
-        function closeAiModal() {
-            document.getElementById('ai-modal').classList.add('hidden');
-        }
-
-        function fileToBase64(file) {
-            return new Promise((resolve, reject) => {
-                const reader = new FileReader();
-                reader.onload = () => {
-                    const result = reader.result;
-                    const base64Data = result.split(',')[1];
-                    resolve(base64Data);
-                };
-                reader.onerror = error => reject(error);
-                reader.readAsDataURL(file);
-            });
-        }
-
-        async function generateVTTWithAI() {
-            if (!selectedAudioFile) {
-                alert("Vui lòng tải lên tệp âm thanh (Audio) trước khi tạo phụ đề bằng AI.");
-                document.getElementById('audio-file-input').click();
-                return;
-            }
-
-            if (selectedAudioFile.size > 20 * 1024 * 1024) {
-                alert("Tệp âm thanh quá lớn (>20MB). Vui lòng chọn tệp nhỏ hơn để đảm bảo tốc độ xử lý.");
-                return;
-            }
-
-            showAiModal(
-                "Đang Phân Tích Audio & Tạo Phụ Đề AI",
-                "Mô hình AI Gemini đang lắng nghe và trích xuất từng câu thoại cùng mốc thời gian chính xác mili-giây...",
-                "Đang chuyển đổi dữ liệu âm thanh..."
-            );
-
-            try {
-                const base64Audio = await fileToBase64(selectedAudioFile);
-                document.getElementById('ai-modal-status').innerText = "Đang gửi âm thanh tới AI Gemini...";
-
-                const systemPrompt = `Bạn là chuyên gia phiên dịch và tạo phụ đề WebVTT cao cấp. 
-Nhiệm vụ: Nghe toàn bộ tệp âm thanh và tạo tệp phụ đề WebVTT hoàn chỉnh với mốc thời gian chính xác từng mili-giây (hh:mm:ss.mmm --> hh:mm:ss.mmm).
-Quy tắc bắt buộc:
-1. Định dạng đầu ra phải bắt đầu bằng chữ WEBWTT.
-2. Xác định các người nói khác nhau nếu có (ví dụ: Speaker 1: ..., Martin: ..., Jane: ...).
-3. Đảm bảo mốc thời gian trùng khớp chính xác từng mili giây với giọng nói thực tế.
-4. CHỈ TRẢ VỀ nội dung WebVTT thuần túy, KHÔNG chứa lời dẫn, KHÔNG chứa các khối markdown.
-5. Lấy đúng văn bản gốc của âm thanh là tiếng anh không có dịch sang tiếng việt.`;
-
-                const userPrompt = "Hãy phân tích tệp âm thanh này và xuất định dạng WebVTT chính xác từng mili-giây.";
-
-                const payload = {
-                    contents: [
-                        {
-                            role: "user",
-                            parts: [
-                                { text: userPrompt },
-                                {
-                                    inlineData: {
-                                        mimeType: selectedAudioFile.type || "audio/mp3",
-                                        data: base64Audio
-                                    }
-                                }
-                            ]
-                        }
-                    ],
-                    systemInstruction: {
-                        parts: [{ text: systemPrompt }]
-                    }
-                };
-
-                const apiKey = atob("QVEuQWI4Uk42SlRVRmp4Y1N5VjZ2dzU4T0w4T0JqNldZako1VmxLdUtvRXJLM1dyY3J2RFE=");
-                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent?key=${apiKey}`;
-
-                let response = null;
-                let retries = 0;
-                const maxRetries = 3;
-
-                while (retries < maxRetries) {
-                    try {
-                        response = await fetch(apiUrl, {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify(payload)
-                        });
-                        if (response.ok) break;
-                    } catch (err) {
-                        retries++;
-                        await new Promise(r => setTimeout(r, 1000 * Math.pow(2, retries)));
-                    }
-                }
-
-                if (!response || !response.ok) {
-                    throw new Error("Không thể kết nối dịch vụ AI. Vui lòng thử lại.");
-                }
-
-                const result = await response.json();
-                const candidate = result.candidates?.[0];
-                let generatedText = candidate?.content?.parts?.[0]?.text;
-
-                if (!generatedText) {
-                    throw new Error("AI không trả về dữ liệu phụ đề phù hợp.");
-                }
-
-                generatedText = generatedText.replace(/```webvtt/gi, '').replace(/```vtt/gi, '').replace(/```/g, '').trim();
-
-                if (!generatedText.toUpperCase().includes('WEBVTT')) {
-                    generatedText = "WEBVTT\n\n" + generatedText;
-                }
-
-                subtitleCues = parseVTT(generatedText);
-                originalCuesSnapshot = JSON.parse(JSON.stringify(subtitleCues));
-                historyStack = [];
-                updateUndoButtonState();
-
-                if (subtitleCues.length === 0) {
-                    throw new Error("Không thể trích xuất được mốc thời gian từ phản hồi AI.");
-                }
-
-                renderSubtitles();
-                currentSentenceIndex = 0;
-                updateSentenceHighlight();
-
-                document.getElementById('vtt-name-display').innerText = `[AI Auto-Generated] ${selectedAudioFile.name}.vtt`;
-                document.getElementById('vtt-file-badge').innerText = 'Phụ đề AI Sẵn Sàng';
-                document.getElementById('vtt-file-badge').className = 'text-[9px] text-amber-300 bg-amber-400/20 px-1 py-0.5 rounded border border-amber-400/40 font-bold';
-                document.getElementById('vtt-status-tag').innerText = `AI Generated (${subtitleCues.length} câu)`;
-                document.getElementById('vtt-status-tag').className = 'text-[9px] sm:text-[10px] font-semibold px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/40';
-
-                document.getElementById('download-vtt-btn').classList.remove('hidden');
-
-                closeAiModal();
-
-            } catch (error) {
-                console.error("AI VTT Generation Error:", error);
-                showAiModal(
-                    "Tạo Phụ Đề AI Thất Bại",
-                    error.message || "Đã xảy ra lỗi trong quá trình xử lý audio bằng AI.",
-                    "Lỗi xử lý!",
-                    true
-                );
-            }
-        }
-
         function downloadCurrentVTT() {
             if (subtitleCues.length === 0) return;
 
@@ -1102,7 +905,7 @@ Quy tắc bắt buộc:
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
-            a.download = (selectedAudioFile ? selectedAudioFile.name.replace(/\.[^/.]+$/, "") : "audio_subtitle") + "_AI.vtt";
+            a.download = (selectedAudioFile ? selectedAudioFile.name.replace(/\.[^/.]+$/, "") : "audio_subtitle") + "_vtt.vtt";
             document.body.appendChild(a);
             a.click();
             document.body.removeChild(a);
