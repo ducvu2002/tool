@@ -51,6 +51,12 @@
             background-color: rgba(14, 165, 233, 0.18) !important;
             box-shadow: 0 4px 14px rgba(14, 165, 233, 0.15);
         }
+
+        /* Ẩn giao diện Phím Tắt khi thiết bị là điện thoại */
+        body.is-mobile #shortcuts-header-btn,
+        body.is-mobile #shortcuts-modal {
+            display: none !important;
+        }
     </style>
 </head>
 <body class="bg-slate-950 text-slate-100 font-sans h-screen h-[100dvh] flex flex-col overflow-hidden antialiased selection:bg-brand-500 selection:text-white">
@@ -417,6 +423,34 @@
     </div>
 
     <script>
+        // ==============================
+        // DEVICE DETECTION
+        // ==============================
+        function isPhoneDevice() {
+            const userAgent = navigator.userAgent || navigator.vendor || window.opera;
+
+            // Kiểm tra thiết bị mobile thực tế
+            const mobileUserAgent = /android|iphone|ipod|windows phone|blackberry|iemobile|opera mini/i.test(userAgent);
+
+            // iPad/iPadOS đôi khi nhận diện như Mac
+            const iPadDevice = /iPad|Macintosh/i.test(userAgent) && navigator.maxTouchPoints > 1;
+
+            // Chỉ xem là điện thoại nếu có mobile UA.
+            // iPad/tablet không bị coi là điện thoại.
+            return mobileUserAgent && !/tablet|ipad/i.test(userAgent) || /iphone|ipod|windows phone|blackberry|iemobile|opera mini/i.test(userAgent);
+        }
+
+        function applyDeviceUI() {
+            if (isPhoneDevice()) {
+                document.body.classList.add('is-mobile');
+            } else {
+                document.body.classList.remove('is-mobile');
+            }
+        }
+
+        // Chạy ngay khi trang tải
+        applyDeviceUI();
+
         // Application State
         let subtitleCues = [];
         let originalCuesSnapshot = [];
@@ -467,6 +501,7 @@
             }
         }
         window.addEventListener('resize', resizeCanvas);
+        window.addEventListener('resize', applyDeviceUI);
 
         function initAudioContext() {
             if (audioCtx) return;
