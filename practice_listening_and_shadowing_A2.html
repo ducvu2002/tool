@@ -440,6 +440,12 @@
             return mobileUserAgent && !/tablet|ipad/i.test(userAgent) || /iphone|ipod|windows phone|blackberry|iemobile|opera mini/i.test(userAgent);
         }
 
+        function canRevealHiddenSubtitlesOnHover() {
+            // Chỉ máy tính có chuột/con trỏ chính xác mới được rê để xem tạm.
+            // Điện thoại không nhận lớp hover này, tránh phụ đề bị hiện mãi sau khi chạm.
+            return !isPhoneDevice() && window.matchMedia('(hover: hover) and (pointer: fine)').matches;
+        }
+
         function applyDeviceUI() {
             if (isPhoneDevice()) {
                 document.body.classList.add('is-mobile');
@@ -841,7 +847,8 @@
                 subtitleCues.forEach((cue, index) => {
                     speakersFound.add(cue.speaker);
                     const colorConfig = getSpeakerColor(cue.speaker);
-                    const blurStyle = isSubtitlesVisible ? '' : 'blur-md select-none group-hover:blur-none transition-all duration-300';
+                    const hoverRevealClass = canRevealHiddenSubtitlesOnHover() ? 'group-hover:blur-none' : '';
+                    const blurStyle = isSubtitlesVisible ? '' : `blur-md select-none ${hoverRevealClass} transition-all duration-300`;
 
                     const item = document.createElement('div');
                     item.id = `sentence-${index}`;
@@ -1049,7 +1056,12 @@
                 if (isSubtitlesVisible) {
                     previewText.classList.remove('blur-md', 'select-none', 'hover:blur-none');
                 } else {
-                    previewText.classList.add('blur-md', 'select-none', 'hover:blur-none');
+                    previewText.classList.add('blur-md', 'select-none');
+                    if (canRevealHiddenSubtitlesOnHover()) {
+                        previewText.classList.add('hover:blur-none');
+                    } else {
+                        previewText.classList.remove('hover:blur-none');
+                    }
                 }
             }
 
