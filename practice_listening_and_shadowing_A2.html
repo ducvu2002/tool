@@ -496,6 +496,8 @@
         let isSubtitlesVisible = true;
         let isEditMode = false;
         let isDraggingProgress = false;
+        // Giữ câu vừa hoàn thành trong lúc người học Shadowing.
+        let shadowingHeldCueIndex = null;
 
         // DOM Elements & Web Audio API
         let audioElement = null;
@@ -1155,6 +1157,12 @@
                 audioElement.pause();
             } else {
                 if (!ensureValidVtt("phát âm thanh")) return;
+                if (shadowingHeldCueIndex !== null) {
+                    const finishedIndex = shadowingHeldCueIndex;
+                    shadowingHeldCueIndex = null;
+                    jumpToSentence(finishedIndex + 1 < subtitleCues.length ? finishedIndex + 1 : 0);
+                    return;
+                }
                 if (subtitleCues.length > 0) {
                     const activeCue = subtitleCues[currentSentenceIndex];
                     if (activeCue && audioElement.currentTime >= activeCue.end - 0.1) {
@@ -1179,6 +1187,7 @@
         function jumpToSentence(index) {
             if (index < 0 || index >= subtitleCues.length) return;
             if (!ensureValidVtt("phát âm thanh")) return;
+            shadowingHeldCueIndex = null;
             currentSentenceIndex = index;
             const cue = subtitleCues[index];
             if (cue) {
@@ -1273,6 +1282,7 @@
             if (subtitleCues.length === 0) return;
 
             // Dùng khoảng thời gian [start, end): tại đúng thời điểm kết thúc cue 1 / bắt đầu cue 2, cue 2 được chọn.
+            if (isShadowingMode && shadowingHeldCueIndex !== null) return;
             const foundIndex = subtitleCues.findIndex(c => currTime >= c.start && currTime < c.end);
             if (foundIndex !== -1 && foundIndex !== currentSentenceIndex) {
                 currentSentenceIndex = foundIndex;
@@ -1454,6 +1464,8 @@
 
         function toggleShadowingMode() {
             isShadowingMode = !isShadowingMode;
+            shadowingHeldCueIndex = null;
+            if (audioElement) updateAudioProgressAndCue(audioElement.currentTime);
             const btn = document.getElementById('mode-shadowing-btn');
             const badge = document.getElementById('mode-badge-text');
 
@@ -1614,6 +1626,7 @@
                 }
 
                 if (isShadowingMode && currTime >= activeCue.end) {
+                    shadowingHeldCueIndex = currentSentenceIndex;
                     audioElement.pause();
                     audioElement.currentTime = activeCue.end;
                     updateSentenceHighlight();
@@ -1670,7 +1683,9 @@
                 if (!audioElement || !audioElement.duration) return;
                 const rect = container.getBoundingClientRect();
                 const pos = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+                shadowingHeldCueIndex = null;
                 audioElement.currentTime = pos * audioElement.duration;
+                updateAudioProgressAndCue(audioElement.currentTime);
             }
 
             container.addEventListener('pointerdown', (e) => {
@@ -1813,7 +1828,17 @@
                 audioElement.ontimeupdate = () => {
                     if (!audioElement.duration) return;
                     const currTime = audioElement.currentTime;
-                    updateAudioProgressAndCue(currTime);
+                    // Bắt điểm kết thúc ngay tại timeupdate, trước khi cue tiếp theo được chọn.
+                    if (isPlaying && isShadowingMode && !isSentenceLoop && shadowingHeldCueIndex === null) {
+                        const cue = subtitleCues[currentSentenceIndex];
+                        if (cue && currTime >= cue.end) {
+                            shadowingHeldCueIndex = currentSentenceIndex;
+                            audioElement.pause();
+                            audioElement.currentTime = cue.end;
+                            updateSentenceHighlight();
+                        }
+                    }
+                    updateAudioProgressAndCue(audioElement.currentTime);
                 };
 
                 audioElement.onplay = () => {
