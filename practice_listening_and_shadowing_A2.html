@@ -57,6 +57,12 @@
         body.is-mobile #shortcuts-modal {
             display: none !important;
         }
+        /* V3: clear, responsive cue validation */
+        .cue-time-error { border-color: #f87171 !important; background: rgba(127,29,29,.23) !important; box-shadow: inset 3px 0 0 #ef4444; }
+        .cue-time-error input[data-time-field] { border-color: #ef4444 !important; background: rgba(127,29,29,.22) !important; }
+        .cue-error-message { color: #fca5a5; font-size: 11px; line-height: 1.5; }
+        .cue-time-error:focus-within { outline: 2px solid rgba(248,113,113,.55); outline-offset: 2px; }
+        @media (max-width: 640px) { .cue-time-error input[data-time-field] { min-width: 0; } }
     </style>
 </head>
 <body class="bg-slate-950 text-slate-100 font-sans h-screen h-[100dvh] flex flex-col overflow-hidden antialiased selection:bg-brand-500 selection:text-white">
@@ -422,6 +428,20 @@
         </div>
     </div>
 
+
+    <!-- V3: reusable non-destructive validation dialog -->
+    <div id="vtt-error-modal" class="hidden fixed inset-0 z-[120] flex items-end sm:items-center justify-center p-2 sm:p-5 bg-slate-950/55 backdrop-blur-sm" role="dialog" aria-modal="true" aria-labelledby="vtt-error-title">
+      <div class="w-full max-w-lg max-h-[75dvh] flex flex-col bg-slate-900 border border-amber-500/40 rounded-2xl shadow-2xl overflow-hidden">
+        <div class="flex gap-3 items-start p-4 border-b border-slate-800 shrink-0">
+          <span class="w-10 h-10 rounded-xl bg-amber-500/15 text-amber-400 flex items-center justify-center shrink-0"><i class="fa-solid fa-triangle-exclamation"></i></span>
+          <div class="min-w-0 flex-1"><h3 id="vtt-error-title" class="font-bold text-sm text-white">Cần kiểm tra phụ đề</h3><p id="vtt-error-description" class="text-xs text-slate-400 mt-1"></p></div>
+          <button id="vtt-error-close-x" type="button" onclick="closeVttError()" aria-label="Đóng thông báo" class="text-slate-400 hover:text-white p-1"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <div id="vtt-error-list" class="min-h-0 overflow-y-auto custom-scrollbar px-4 py-3 space-y-2 text-xs"></div>
+        <div class="p-3 border-t border-slate-800 shrink-0 flex justify-end"><button id="vtt-error-close" type="button" onclick="closeVttError()" class="rounded-lg bg-brand-600 hover:bg-brand-500 text-white font-semibold text-xs px-5 py-2">Đã hiểu, quay lại sửa</button></div>
+      </div>
+    </div>
+
     <script>
         // ==============================
         // DEVICE DETECTION
@@ -546,71 +566,80 @@
         }
 
         function parseInputTimestamp(str) {
-            if (typeof str === 'number') return str;
-            if (!str) return 0;
-            const cleanStr = str.toString().replace(',', '.').trim();
-            const parts = cleanStr.split(':');
-            let seconds = 0;
-
-            if (parts.length === 3) {
-                seconds = parseFloat(parts[0]) * 3600 + parseFloat(parts[1]) * 60 + parseFloat(parts[2]);
-            } else if (parts.length === 2) {
-                seconds = parseFloat(parts[0]) * 60 + parseFloat(parts[1]);
-            } else {
-                seconds = parseFloat(cleanStr) || 0;
+            if (typeof str === 'number') return Number.isFinite(str) ? str : NaN;
+            const value = String(str ?? '').trim().replace(',', '.');
+            // Reject partial matches, malformed components and out-of-range minutes/seconds.
+            const match = value.match(/^(?:(\d+):)?(\d{1,2}):(\d{2})(?:\.(\d{1,3}))?$/);
+            if (match) {
+                const hrs = Number(match[1] || 0), mins = Number(match[2]), secs = Number(match[3]);
+                if (mins >= 60 && match[1] !== undefined || secs >= 60) return NaN;
+                return hrs * 3600 + mins * 60 + secs + Number((match[4] || '').padEnd(3, '0')) / 1000;
             }
+            // Keep V2 compatibility with plain numeric seconds, but reject arbitrary text.
+            return /^(?:\d+(?:\.\d+)?|-\d+(?:\.\d+)?)$/.test(value) ? Number(value) : NaN;
+        }
 
-            return isNaN(seconds) ? 0 : seconds;
+        function displayCueTime(value) {
+            return Number.isFinite(value) ? formatVttTimestamp(value) : String(value ?? 'không hợp lệ');
         }
 
         function formatTimestampForInput(seconds) {
             return formatVttTimestamp(seconds);
         }
 
-        function parseVTT(vttText) {
-            const cues = [];
-            const lines = vttText.replace(/\r\n/g, '\n').replace(/\r/g, '\n').split('\n');
-            let i = 0;
+        function parseVTTWithDiagnostics(vttText) {
+            const cues = [], errors = [];
+            const lines = String(vttText).replace(/^\uFEFF/, '').replace(/\r\n?/g, '\n').split('\n');
+            let currentSpeaker = 'Speaker';
+            function extractSpeakerLabel(text) {
+                // Chỉ nhận nhãn ngắn ở đầu câu: tên gồm 1-3 từ, không có dấu câu
+                // kết thúc câu. Giới hạn độ dài tránh hiểu cả câu văn là tên người.
+                const match = text.match(/^([A-Za-z][A-Za-z.'’-]*(?:\s+[A-Za-z][A-Za-z.'’-]*){0,2}):\s+(.+)$/);
+                if (!match) return null;
 
-            while (i < lines.length) {
-                let line = lines[i].trim();
+                const label = match[1].trim();
+                const remainder = match[2].trim();
+                if (!remainder || label.length > 30) return null;
 
-                if (!line || line.startsWith('WEBVTT') || line.startsWith('NOTE')) {
-                    i++;
-                    continue;
-                }
+                // Không coi phần trước dấu ":" là tên nếu nó có dạng giờ hoặc số.
+                if (/^\d/.test(label)) return null;
 
-                if (line.includes('-->')) {
-                    const timeParts = line.split('-->');
-                    const start = parseInputTimestamp(timeParts[0].trim());
-                    const end = parseInputTimestamp(timeParts[1].trim().split(' ')[0]);
-
-                    i++;
-                    let textLines = [];
-                    while (i < lines.length && lines[i].trim() !== '') {
-                        textLines.push(lines[i].trim());
-                        i++;
-                    }
-
-                    let fullText = textLines.join(' ').replace(/<[^>]*>/g, '');
-                    let speaker = 'Speaker';
-
-                    if (fullText.includes(':')) {
-                        const parts = fullText.split(':');
-                        speaker = parts[0].trim();
-                        fullText = parts.slice(1).join(':').trim();
-                    }
-
-                    cues.push({ start, end, speaker, text: fullText });
-                } else {
-                    i++;
-                }
+                return { speaker: label, text: remainder };
             }
 
-            return cues;
+            let i = 0, blockNumber = 0;
+            while (i < lines.length) {
+                if (!lines[i].trim()) { i++; continue; }
+                const firstLine = i + 1, block = [];
+                while (i < lines.length && lines[i].trim()) block.push(lines[i++]);
+                const first = block[0].trim();
+                if (/^WEBVTT(?:\s|$)/i.test(first) || /^(NOTE|STYLE|REGION)(?:\s|$)/.test(first)) continue;
+                blockNumber++;
+                const timingIndex = block.findIndex((line, idx) => idx < 2 && line.includes('-->'));
+                if (timingIndex < 0) {
+                    errors.push({cue: blockNumber, time: `Dòng ${firstLine}`, reason: 'Không tìm thấy giờ bắt đầu và kết thúc của câu này nên chưa thể đưa vào danh sách.'});
+                    continue;
+                }
+                const timing = block[timingIndex].split('-->');
+                if (timing.length !== 2) {
+                    errors.push({cue: blockNumber, time: `Dòng ${firstLine + timingIndex}`, reason: 'Giờ bắt đầu và kết thúc của câu này không đúng cách viết nên chưa thể đưa vào danh sách.'});
+                    continue;
+                }
+                const startRaw = timing[0].trim();
+                const endRaw = timing[1].trim().split(/\s+/)[0];
+                let fullText = block.slice(timingIndex + 1).map(line => line.trim()).join(' ').replace(/<[^>]*>/g, '').trim();
+                const labeled = extractSpeakerLabel(fullText);
+                if (labeled) { currentSpeaker = labeled.speaker; fullText = labeled.text; }
+                cues.push({start: parseInputTimestamp(startRaw), end: parseInputTimestamp(endRaw),
+                    startRaw, endRaw, speaker: currentSpeaker, text: fullText});
+            }
+            return {cues, errors};
         }
 
+        function parseVTT(vttText) { return parseVTTWithDiagnostics(vttText).cues; }
+
         function toggleEditMode() {
+            if (isEditMode && !ensureValidVtt("kết thúc chỉnh sửa")) return;
             isEditMode = !isEditMode;
             const btn = document.getElementById('toggle-edit-mode-btn');
             const icon = document.getElementById('edit-mode-icon');
@@ -630,6 +659,8 @@
             }
 
             renderSubtitles();
+            refreshCueErrorHighlights();
+            if (isEditMode) jumpToFirstCueError();
             updateSentenceHighlight();
         }
 
@@ -647,6 +678,7 @@
             if (historyStack.length === 0) return;
             const previousState = historyStack.pop();
             subtitleCues = previousState;
+            onCueDataChanged();
             renderSubtitles();
             updateSentenceHighlight();
             updateUndoButtonState();
@@ -668,6 +700,7 @@
             if (!originalCuesSnapshot[index]) return;
             saveStateToHistory();
             subtitleCues[index] = JSON.parse(JSON.stringify(originalCuesSnapshot[index]));
+            onCueDataChanged();
             renderSubtitles();
             updateSentenceHighlight();
         }
@@ -690,6 +723,7 @@
                 currentSentenceIndex = subtitleCues.length - 1;
             }
 
+            onCueDataChanged();
             if (!isEditMode) {
                 isEditMode = true;
                 const btn = document.getElementById('toggle-edit-mode-btn');
@@ -709,6 +743,7 @@
             if (index >= 0 && index < subtitleCues.length) {
                 saveStateToHistory();
                 subtitleCues.splice(index, 1);
+            onCueDataChanged();
                 if (currentSentenceIndex >= subtitleCues.length) {
                     currentSentenceIndex = Math.max(0, subtitleCues.length - 1);
                 }
@@ -724,10 +759,13 @@
 
             if (field === 'start' || field === 'end') {
                 subtitleCues[index][field] = parseInputTimestamp(value);
+                subtitleCues[index][field + "Raw"] = value;
             } else {
                 subtitleCues[index][field] = value;
             }
 
+            onCueDataChanged();
+            refreshCueErrorHighlights();
             document.getElementById('download-vtt-btn').classList.remove('hidden');
             const previewText = document.getElementById('current-subtitle-preview');
             const activeCue = subtitleCues[currentSentenceIndex];
@@ -740,6 +778,8 @@
             if (!subtitleCues[index]) return;
             saveStateToHistory();
             subtitleCues[index].start = audioElement.currentTime || 0;
+            delete subtitleCues[index].startRaw;
+            onCueDataChanged();
             renderSubtitles();
         }
 
@@ -747,16 +787,22 @@
             if (!subtitleCues[index]) return;
             saveStateToHistory();
             subtitleCues[index].end = audioElement.currentTime || 0;
+            delete subtitleCues[index].endRaw;
+            onCueDataChanged();
             renderSubtitles();
         }
 
         function sortCuesByTime() {
             saveStateToHistory();
             subtitleCues.sort((a, b) => a.start - b.start);
+            onCueDataChanged();
             renderSubtitles();
             updateSentenceHighlight();
         }
 
+        function escapeVttHtml(value) {
+            return String(value ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+        }
         function renderSubtitles() {
             const container = document.getElementById('subtitles-container');
             const legendContainer = document.getElementById('speakers-legend');
@@ -815,14 +861,14 @@
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
                             <div class="flex items-center gap-1.5">
                                 <span class="text-slate-400 text-[10px] w-12 shrink-0 font-medium">Bắt đầu:</span>
-                                <input type="text" value="${formatTimestampForInput(cue.start)}" onchange="updateCue(${index}, 'start', this.value)" class="bg-slate-950 border border-slate-700/80 rounded px-2 py-1 text-xs font-mono text-slate-200 w-full focus:outline-none focus:border-brand-500 transition">
+                                <input type="text" data-time-field="start" value="${escapeVttHtml(cue.startRaw ?? formatTimestampForInput(cue.start))}" onchange="updateCue(${index}, 'start', this.value)" class="bg-slate-950 border border-slate-700/80 rounded px-2 py-1 text-xs font-mono text-slate-200 w-full focus:outline-none focus:border-brand-500 transition">
                                 <button onclick="setCueStartToCurrent(${index})" class="px-1.5 sm:px-2 py-1 text-[10px] font-semibold rounded bg-brand-600/20 hover:bg-brand-600/40 text-brand-400 border border-brand-500/30 whitespace-nowrap transition flex items-center gap-1" title="Đặt mốc Bắt Đầu = Thời gian audio hiện tại">
                                     <i class="fa-solid fa-stopwatch"></i> <span class="hidden sm:inline">Sync</span>
                                 </button>
                             </div>
                             <div class="flex items-center gap-1.5">
                                 <span class="text-slate-400 text-[10px] w-12 shrink-0 font-medium">Kết thúc:</span>
-                                <input type="text" value="${formatTimestampForInput(cue.end)}" onchange="updateCue(${index}, 'end', this.value)" class="bg-slate-950 border border-slate-700/80 rounded px-2 py-1 text-xs font-mono text-slate-200 w-full focus:outline-none focus:border-brand-500 transition">
+                                <input type="text" data-time-field="end" value="${escapeVttHtml(cue.endRaw ?? formatTimestampForInput(cue.end))}" onchange="updateCue(${index}, 'end', this.value)" class="bg-slate-950 border border-slate-700/80 rounded px-2 py-1 text-xs font-mono text-slate-200 w-full focus:outline-none focus:border-brand-500 transition">
                                 <button onclick="setCueEndToCurrent(${index})" class="px-1.5 sm:px-2 py-1 text-[10px] font-semibold rounded bg-brand-600/20 hover:bg-brand-600/40 text-brand-400 border border-brand-500/30 whitespace-nowrap transition flex items-center gap-1" title="Đặt mốc Kết Thúc = Thời gian audio hiện tại">
                                     <i class="fa-solid fa-stopwatch"></i> <span class="hidden sm:inline">Sync</span>
                                 </button>
@@ -883,6 +929,7 @@
             });
 
             document.getElementById('total-cues-text').innerText = `Tổng số ${subtitleCues.length} câu thoại ${isEditMode ? '(Đang chỉnh sửa)' : ''}`;
+            refreshCueErrorHighlights();
         }
 
         function handleAudioSelect(e) {
@@ -903,35 +950,156 @@
             }
         }
 
+        // All playback, edit completion and export paths consult this same live validation.
+        function validateVttCues(cues = subtitleCues) {
+            const errors = [];
+            cues.forEach((cue, i) => {
+                const number = i + 1;
+                const time = `${displayCueTime(cue.startRaw ?? cue.start)} → ${displayCueTime(cue.endRaw ?? cue.end)}`;
+                const add = reason => errors.push({cue: number, time, reason});
+                if (!Number.isFinite(cue.start)) add('Giờ bắt đầu chưa đúng. Hãy kiểm tra và nhập lại.');
+                else if (cue.start < 0) add('Giờ bắt đầu không được nhỏ hơn 0.');
+                if (!Number.isFinite(cue.end)) add('Giờ kết thúc chưa đúng. Hãy kiểm tra và nhập lại.');
+                else if (cue.end < 0) add('Giờ kết thúc không được nhỏ hơn 0.');
+                if (Number.isFinite(cue.start) && Number.isFinite(cue.end) && cue.end <= cue.start)
+                    add('Giờ kết thúc phải sau giờ bắt đầu của câu này.');
+                if (i && Number.isFinite(cue.start)) {
+                    const previous = cues[i - 1];
+                    if (Number.isFinite(previous.start) && cue.start < previous.start)
+                        add(`Câu này bắt đầu trước câu ${i} (${displayCueTime(previous.start)}). Hãy kiểm tra lại thứ tự thời gian.`);
+                    if (Number.isFinite(previous.end) && previous.end > cue.start)
+                        add(`Câu này bắt đầu lúc ${displayCueTime(cue.start)}, khi câu ${i} chưa kết thúc (${displayCueTime(previous.end)}).`);
+                }
+            });
+            return errors;
+        }
+
+        function refreshCueErrorHighlights() {
+            if (!isEditMode) return;
+            const errors = validateVttCues();
+            subtitleCues.forEach((cue, index) => {
+                const item = document.getElementById(`sentence-${index}`);
+                if (!item) return;
+                const related = errors.filter(error => error.cue === index + 1);
+                item.classList.toggle('cue-time-error', related.length > 0);
+                item.querySelectorAll('.cue-error-message').forEach(node => node.remove());
+                const oldBadge = item.querySelector('[data-cue-error-badge]');
+                if (oldBadge) oldBadge.remove();
+                if (!related.length) return;
+                const badge = document.createElement('div');
+                badge.dataset.cueErrorBadge = 'true';
+                badge.className = 'flex items-center gap-1.5 text-red-300 text-xs font-semibold';
+                const icon = document.createElement('i'); icon.className = 'fa-solid fa-circle-exclamation';
+                badge.append(icon, document.createTextNode(' Câu này cần sửa thời gian'));
+                item.insertBefore(badge, item.firstChild);
+                const message = document.createElement('div');
+                message.className = 'cue-error-message space-y-1';
+                related.forEach(error => {
+                    const line = document.createElement('p'); line.textContent = '• ' + error.reason;
+                    message.appendChild(line);
+                });
+                item.appendChild(message);
+                item.querySelectorAll('input[data-time-field]').forEach(input => {
+                    input.setAttribute('aria-invalid', 'true');
+                });
+            });
+            subtitleCues.forEach((cue, index) => {
+                if (errors.some(error => error.cue === index + 1)) return;
+                document.getElementById(`sentence-${index}`)?.querySelectorAll('input[data-time-field]').forEach(input => input.removeAttribute('aria-invalid'));
+            });
+        }
+        function jumpToFirstCueError() {
+            if (!isEditMode) return;
+            const first = validateVttCues().find(error => Number.isInteger(error.cue));
+            if (!first) return;
+            const item = document.getElementById(`sentence-${first.cue - 1}`);
+            if (item) item.scrollIntoView({behavior: 'smooth', block: 'center'});
+        }
+        let vttErrorReturnFocus = null;
+        function showVttErrors(title, errors, description = 'Các câu phụ đề vẫn được giữ nguyên. Hãy sửa lại thời gian ở những câu được báo bên dưới.') {
+            const modal = document.getElementById('vtt-error-modal');
+            vttErrorReturnFocus = document.activeElement;
+            document.getElementById('vtt-error-title').textContent = title;
+            document.getElementById('vtt-error-description').textContent = description;
+            const list = document.getElementById('vtt-error-list');
+            list.replaceChildren();
+            errors.slice(0, 8).forEach(error => {
+                const item = document.createElement('div');
+                item.className = 'rounded-lg border border-slate-700 bg-slate-950/70 p-3 space-y-1';
+                const heading = document.createElement('div');
+                heading.className = 'text-amber-300 font-semibold';
+                heading.textContent = error.cue ? `Câu ${error.cue} · ${error.time || 'Chưa rõ thời gian'}` : (error.time || 'Cần kiểm tra');
+                const detail = document.createElement('p'); detail.className = 'text-slate-300 leading-relaxed';
+                detail.textContent = error.reason || String(error);
+                item.append(heading, detail); list.append(item);
+            });
+            if (errors.length > 8) {
+                const more = document.createElement('p'); more.className = 'text-amber-400 font-medium py-2';
+                more.textContent = `Còn ${errors.length - 8} lỗi khác chưa hiển thị.`; list.append(more);
+            }
+            modal.classList.remove('hidden');
+            document.getElementById('vtt-error-close').focus();
+        }
+        function closeVttError() {
+            document.getElementById('vtt-error-modal').classList.add('hidden');
+            if (isEditMode && validateVttCues().length) jumpToFirstCueError();
+            else if (vttErrorReturnFocus && vttErrorReturnFocus.isConnected) vttErrorReturnFocus.focus();
+        }
+        document.addEventListener('keydown', e => {
+            if (e.key === 'Escape' && !document.getElementById('vtt-error-modal').classList.contains('hidden')) {
+                e.preventDefault(); e.stopImmediatePropagation(); closeVttError();
+            }
+        }, true);
+        function ensureValidVtt(action) {
+            const errors = validateVttCues();
+            if (!errors.length) return true;
+            if (audioElement && !audioElement.paused) audioElement.pause();
+            showVttErrors(`Chưa thể ${action} vì còn ${errors.length} chỗ cần sửa`, errors);
+            return false;
+        }
+        function onCueDataChanged() {
+            if (audioElement && !audioElement.paused) ensureValidVtt('tiếp tục nghe');
+        }
+
         function handleVttSelect(e) {
             const file = e.target.files[0];
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = function(evt) {
-                    const text = evt.target.result;
-                    subtitleCues = parseVTT(text);
-                    originalCuesSnapshot = JSON.parse(JSON.stringify(subtitleCues));
-                    historyStack = [];
-                    updateUndoButtonState();
-
-                    renderSubtitles();
-                    currentSentenceIndex = 0;
-                    updateSentenceHighlight();
-
-                    document.getElementById('vtt-name-display').innerText = file.name;
-                    document.getElementById('vtt-file-badge').innerText = 'VTT Sẵn Sàng';
-                    document.getElementById('vtt-file-badge').className = 'text-[9px] text-emerald-400 bg-emerald-400/10 px-1 py-0.5 rounded border border-emerald-400/20';
-                    document.getElementById('vtt-status-tag').innerText = `Tải từ file (${subtitleCues.length} câu)`;
-                    document.getElementById('vtt-status-tag').className = 'text-[9px] sm:text-[10px] font-semibold px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/40';
-
-                    document.getElementById('download-vtt-btn').classList.remove('hidden');
-                };
-                reader.readAsText(file);
-            }
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(evt) {
+                const parsed = parseVTTWithDiagnostics(evt.target.result);
+                if (!parsed.cues.length) {
+                    showVttErrors('Không thể nhập phụ đề', parsed.errors.length ? parsed.errors :
+                        [{time: file.name, reason: 'Không đọc được câu phụ đề nào trong tệp này. Các câu đang có vẫn được giữ nguyên.'}],
+                        'Các câu phụ đề bạn đang làm vẫn được giữ nguyên.');
+                    e.target.value = '';
+                    return;
+                }
+                if (audioElement && !audioElement.paused) audioElement.pause();
+                subtitleCues = parsed.cues;
+                originalCuesSnapshot = JSON.parse(JSON.stringify(subtitleCues));
+                historyStack = []; updateUndoButtonState();
+                currentSentenceIndex = 0;
+                // Importing a broken file must leave all readable cues directly editable.
+                const errors = [...parsed.errors, ...validateVttCues(subtitleCues)];
+                if (errors.length && !isEditMode) toggleEditMode();
+                else { renderSubtitles(); updateSentenceHighlight(); }
+                document.getElementById('vtt-name-display').innerText = file.name;
+                document.getElementById('vtt-file-badge').innerText = errors.length ? 'VTT cần sửa' : 'VTT Sẵn Sàng';
+                document.getElementById('vtt-file-badge').className = errors.length
+                    ? 'text-[9px] text-amber-400 bg-amber-400/10 px-1 py-0.5 rounded border border-amber-400/20'
+                    : 'text-[9px] text-emerald-400 bg-emerald-400/10 px-1 py-0.5 rounded border border-emerald-400/20';
+                document.getElementById('vtt-status-tag').innerText = `Tải từ file (${subtitleCues.length} câu${errors.length ? ', cần sửa' : ''})`;
+                document.getElementById('download-vtt-btn').classList.remove('hidden');
+                if (errors.length) showVttErrors(`Đã nhập ${subtitleCues.length} câu · Có ${errors.length} chỗ cần sửa`, errors,
+                    'Những câu đọc được đã có trong danh sách. Bạn có thể sửa ngay. Cần sửa hết thời gian bị sai trước khi nghe hoặc tải phụ đề.');
+                e.target.value = '';
+            };
+            reader.onerror = () => showVttErrors('Không thể đọc tệp', [{time: file.name, reason: 'Không mở được tệp này. Các câu phụ đề đang có vẫn được giữ nguyên.'}]);
+            reader.readAsText(file);
         }
 
         function downloadCurrentVTT() {
-            if (subtitleCues.length === 0) return;
+            if (subtitleCues.length === 0 || !ensureValidVtt("tải phụ đề")) return;
 
             let vttContent = "WEBVTT\n\n";
 
@@ -955,6 +1123,7 @@
         }
 
         function formatVttTimestamp(seconds) {
+            if (!Number.isFinite(seconds)) return "Không hợp lệ";
             const hrs = Math.floor(seconds / 3600);
             const mins = Math.floor((seconds % 3600) / 60);
             const secs = Math.floor(seconds % 60);
@@ -977,7 +1146,7 @@
 
         function togglePlayPause() {
             if (!audioLoaded) {
-                alert("Vui lòng nạp file Audio trước.");
+                showVttErrors("Bạn chưa chọn tệp âm thanh", [{reason:"Hãy chọn một tệp âm thanh rồi thử lại."}], "Chọn tệp âm thanh để bắt đầu nghe.");
                 document.getElementById('audio-file-input').click();
                 return;
             }
@@ -985,6 +1154,7 @@
             if (isPlaying) {
                 audioElement.pause();
             } else {
+                if (!ensureValidVtt("phát âm thanh")) return;
                 if (subtitleCues.length > 0) {
                     const activeCue = subtitleCues[currentSentenceIndex];
                     if (activeCue && audioElement.currentTime >= activeCue.end - 0.1) {
@@ -1008,6 +1178,7 @@
 
         function jumpToSentence(index) {
             if (index < 0 || index >= subtitleCues.length) return;
+            if (!ensureValidVtt("phát âm thanh")) return;
             currentSentenceIndex = index;
             const cue = subtitleCues[index];
             if (cue) {
@@ -1101,7 +1272,8 @@
 
             if (subtitleCues.length === 0) return;
 
-            const foundIndex = subtitleCues.findIndex(c => currTime >= c.start && currTime <= c.end);
+            // Dùng khoảng thời gian [start, end): tại đúng thời điểm kết thúc cue 1 / bắt đầu cue 2, cue 2 được chọn.
+            const foundIndex = subtitleCues.findIndex(c => currTime >= c.start && currTime < c.end);
             if (foundIndex !== -1 && foundIndex !== currentSentenceIndex) {
                 currentSentenceIndex = foundIndex;
                 updateSentenceHighlight();
@@ -1235,7 +1407,7 @@
         });
 
         function replayCurrentSentence() {
-            if (!audioLoaded) return;
+            if (!audioLoaded || !ensureValidVtt("phát lại âm thanh")) return;
             if (subtitleCues.length > 0 && subtitleCues[currentSentenceIndex]) {
                 const cue = subtitleCues[currentSentenceIndex];
                 audioElement.currentTime = cue.start;
@@ -1645,6 +1817,7 @@
                 };
 
                 audioElement.onplay = () => {
+                    if (!ensureValidVtt('phát âm thanh')) { audioElement.pause(); return; }
                     isPlaying = true;
                     if (playIcon) playIcon.className = "fa-solid fa-pause";
                     drawVisualizer();
@@ -1665,6 +1838,12 @@
                 };
             }
 
+            // Guard every call to the real media element's play method (buttons, shortcuts, auto-play).
+            const nativePlay = audioElement.play.bind(audioElement);
+            audioElement.play = function(...args) {
+                if (!ensureValidVtt('phát âm thanh')) return Promise.resolve();
+                return nativePlay(...args);
+            };
             resizeCanvas();
             renderSubtitles();
             updateSentenceHighlight();
